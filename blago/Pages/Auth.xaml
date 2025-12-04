@@ -6,35 +6,174 @@
       xmlns:local="clr-namespace:blago.Pages"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="Auth" KeyDown="Enter">
+      Title="Auth" KeyDown="Enter" Background="{DynamicResource DarkBackground}">
 
-    <Grid>
-        <Grid.Background>
-            <ImageBrush ImageSource="/Image/LogIn_BG.png" Stretch="UniformToFill"/>
-        </Grid.Background>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="12*"/>
-            <RowDefinition Height="13*"/>
-        </Grid.RowDefinitions>
-        <Image Source="/Image/Logo.png" HorizontalAlignment="Center" VerticalAlignment="Center" Height="130" Width="374"/>
-        <StackPanel Margin="215,0,215,0" VerticalAlignment="Center" Grid.Row="1" Height="280">
-            <TextBlock FontSize="24" Margin="0,0,0,10" HorizontalAlignment="Center" Language="ru-ru" Text="Авторизация" Foreground="#98D9B2" FontWeight="Bold"/>
-            <Border BorderThickness="4" BorderBrush="#FFD4D4D4" CornerRadius="8">
-                <TextBox x:Name="txtUser" Height="30" Margin="0,0,0,0" BorderBrush="#FFD4D4D4" Background="#FFD4D4D4" SelectionBrush="{x:Null}" FontSize="20" Foreground="#FFA3A3A3" FontWeight="Bold" />
+    <Page.Resources>
+        <Color x:Key="DarkBackgroundColor">#FF0F1F1F</Color>
+        <Color x:Key="CardBackgroundColor">#FF162A2A</Color>
+        <Color x:Key="AccentMintColor">#FFA9F5D0</Color>
+        <Color x:Key="PrimaryTealColor">#FF2C7A78</Color>
+        <Color x:Key="TextLightColor">#FFFFFFFF</Color>
+        <Color x:Key="TextDimColor">#FFB4C8C8</Color>
+        <Color x:Key="InputBackgroundColor">#FF1D3535</Color>
+        <Color x:Key="InputBorderColor">#FF355555</Color>
+
+        <SolidColorBrush x:Key="DarkBackground" Color="{StaticResource DarkBackgroundColor}"/>
+        <SolidColorBrush x:Key="CardBackground" Color="{StaticResource CardBackgroundColor}"/>
+        <SolidColorBrush x:Key="AccentMint" Color="{StaticResource AccentMintColor}"/>
+        <SolidColorBrush x:Key="PrimaryTeal" Color="{StaticResource PrimaryTealColor}"/>
+        <SolidColorBrush x:Key="TextLight" Color="{StaticResource TextLightColor}"/>
+        <SolidColorBrush x:Key="TextDim" Color="{StaticResource TextDimColor}"/>
+        <SolidColorBrush x:Key="InputBg" Color="{StaticResource InputBackgroundColor}"/>
+        <SolidColorBrush x:Key="InputBorder" Color="{StaticResource InputBorderColor}"/>
+        <Thickness x:Key="DefaultPadding">12</Thickness>
+        <CornerRadius x:Key="CardRadius">12</CornerRadius>
+        <FontFamily x:Key="UiFont">Segoe UI</FontFamily>
+
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="28"/>
+            <Setter Property="Background" Value="{StaticResource CardBackground}"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="30" ShadowDepth="0" Color="#88000000"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TitleText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
+            <Setter Property="FontSize" Value="26"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style x:Key="CaptionText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{StaticResource TextDim}"/>
+        </Style>
+
+        <Style x:Key="InputBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource InputBg}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
+            <Setter Property="BorderThickness" Value="1.3"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PasswordBoxStyle" TargetType="PasswordBox">
+            <Setter Property="Background" Value="{StaticResource InputBg}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
+            <Setter Property="BorderThickness" Value="1.3"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="10">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentMint}"/>
+            <Setter Property="Foreground" Value="#FF0F1F1F"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="10">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="0" Color="#55000000"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <Grid Background="{StaticResource DarkBackground}" Margin="24">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="75*"/>
+            <ColumnDefinition Width="113*"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0" Margin="12,12,12,12">
+            <Border Background="{DynamicResource CardBackground}" CornerRadius="12" Padding="18">
+                <Grid Background="{DynamicResource CardBackground}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="260" >
+                        <Grid Height="120" Width="120" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Image Source="/Image/LogoNew.png" Margin="-34,-71,-34,4"/>
+                            <TextBlock FontFamily="{StaticResource UiFont}" 
+                                       FontWeight="Bold" Foreground="White"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18"/>
+                        </Grid>
+                            <TextBlock Text="Панель управления базами данных" TextAlignment="Center"
+                                       Margin="0,18,0,0" Style="{StaticResource CaptionText}" Foreground="White" Opacity="0.95" FontSize="14"/>
+                    </StackPanel>
+                </Grid>
             </Border>
-            <Border BorderThickness="4" BorderBrush="#FFD4D4D4" CornerRadius="8" Margin="0,20,0,20">
-                <PasswordBox x:Name="txtPass" Height="30" BorderBrush="#FFD4D4D4" Background="#FFD4D4D4" SelectionBrush="{x:Null}" FontSize="20" Foreground="#FFA3A3A3" FontWeight="Bold"/>
-            </Border>
-
-            <Button Content="Войти" Height="35" Click="Login_Click" Background="#FF98D9B2" Foreground="#5F8B71" FontWeight="Bold" FontSize="18" Width="168">
-                <Button.Resources>
-                    <Style TargetType="Border">
-                        <Setter Property="CornerRadius" Value="8"/>
-                    </Style>
-                </Button.Resources>
-            </Button>
-
-            <TextBlock x:Name="txtStatus" Foreground="Red" Margin="0,10,0,0"/>
-        </StackPanel>
+        </Grid>
+        <Grid Grid.Column="1" Margin="12,12,12,12">
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="380">
+                <Border Style="{StaticResource CardStyle}" Background="{DynamicResource InputBg}">
+                    <StackPanel>
+                        <TextBlock Text="Авторизация" Style="{StaticResource TitleText}" Margin="0,0,0,12"/>
+                        <TextBlock Text="Логин" Margin="2,6,0,4" Style="{StaticResource CaptionText}"/>
+                        <TextBox x:Name="txtUser" Style="{StaticResource InputBoxStyle}"
+                                 ToolTip="Введите логин" AutomationProperties.Name="Логин"/>
+                        <TextBlock Text="Пароль" Margin="2,12,0,4" Style="{StaticResource CaptionText}"/>
+                        <PasswordBox x:Name="txtPass" Style="{StaticResource PasswordBoxStyle}"
+                                     ToolTip="Введите пароль" AutomationProperties.Name="Пароль"/>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                        <Button x:Name="LoginButton" Content="Войти" Style="{StaticResource PrimaryButton}"
+                                Margin="0,18,0,8" Height="44" Click="Login_Click" Background="{DynamicResource AccentMint}"/>
+                        <TextBlock Text="Вход только для сотрудников компании" Style="{StaticResource CaptionText}"
+                                   HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
     </Grid>
 </Page>
