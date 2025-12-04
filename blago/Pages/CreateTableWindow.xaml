@@ -1,0 +1,155 @@
+﻿<Window x:Class="blago.Pages.CreateTableWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:blago.Pages"
+        mc:Ignorable="d"
+  Title="Создание новой таблицы" 
+        Height="500" 
+        Width="600"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,5,0,2"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Название таблицы -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Название таблицы:"/>
+            <TextBox x:Name="txtTableName" 
+                     Text="NewTable" 
+                     FontSize="14"/>
+            <TextBlock Text="Примеры: Employees, Products, Orders" 
+                       Foreground="Gray" 
+                       FontSize="11"/>
+        </StackPanel>
+
+        <!-- Добавление столбцов -->
+        <StackPanel Grid.Row="1" Margin="0,20,0,0">
+            <TextBlock Text="Добавить столбец:"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0" 
+                         x:Name="txtColumnName" 
+                         Text="ColumnName" 
+                         Margin="0,0,5,0"/>
+
+                <ComboBox Grid.Column="1" 
+                          x:Name="cmbDataType"
+                          SelectedIndex="0">
+                    <ComboBoxItem Content="int"/>
+                    <ComboBoxItem Content="varchar(50)"/>
+                    <ComboBoxItem Content="nvarchar(100)"/>
+                    <ComboBoxItem Content="nvarchar(MAX)"/>
+                    <ComboBoxItem Content="datetime"/>
+                    <ComboBoxItem Content="date"/>
+                    <ComboBoxItem Content="decimal(18,2)"/>
+                    <ComboBoxItem Content="bit"/>
+                    <ComboBoxItem Content="uniqueidentifier"/>
+                </ComboBox>
+
+                <Button Grid.Column="2" 
+                        Content="Добавить" 
+                        Click="AddColumn_Click" 
+                        Width="80"
+                        Background="LightGreen"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Список добавленных столбцов -->
+        <StackPanel Grid.Row="2" Margin="0,20,0,0">
+            <TextBlock Text="Столбцы таблицы:"/>
+
+            <Border BorderBrush="Gray" 
+                    BorderThickness="1" 
+                    Height="250">
+                <DataGrid x:Name="dgColumns"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="True"
+                          CanUserReorderColumns="False"
+                          CanUserResizeColumns="True"
+                          CanUserSortColumns="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Имя столбца" 
+                                            Binding="{Binding ColumnName}" 
+                                            Width="*"/>
+                        <DataGridTextColumn Header="Тип данных" 
+                                            Binding="{Binding DataType}" 
+                                            Width="*"/>
+                        <DataGridCheckBoxColumn Header="NULL" 
+                                                Binding="{Binding AllowNull}"
+                                                Width="60"/>
+                        <DataGridCheckBoxColumn Header="ID" 
+                                                Binding="{Binding IsIdentity}"
+                                                Width="60"/>
+                        <DataGridCheckBoxColumn Header="PK" 
+                                                Binding="{Binding IsPrimaryKey}"
+                                                Width="60"/>
+                        <DataGridTemplateColumn Header="Действия" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="Удалить" 
+                                            Click="DeleteColumn_Click"
+                                            Background="LightCoral"
+                                            Padding="5,2"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </StackPanel>
+
+        <!-- Кнопки действий -->
+        <StackPanel Grid.Row="3" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right"
+                    Margin="0,20,0,0">
+            <Button Content="Создать таблицу" 
+                    Click="CreateTable_Click" 
+                    Width="120"
+                    Background="LightBlue"
+                    FontSize="12"/>
+            <Button Content="Отмена" 
+                    Click="Cancel_Click" 
+                    Width="80"
+                    Background="LightGray"
+                    Margin="10,0,0,0"/>
+        </StackPanel>
+    </Grid>
+</Window>

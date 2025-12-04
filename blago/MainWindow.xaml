@@ -5,19 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:blago"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="450">
+        Title="MainWindow" Height="450" Width="800" ResizeMode="NoResize" SizeToContent="WidthAndHeight" >
     <Grid>
-        <StackPanel Margin="30" VerticalAlignment="Center">
-            <TextBlock Text="SQL Server Auth" FontSize="20" Margin="0,0,0,20"/>
-
-            <TextBox x:Name="txtUser" Height="30" Margin="0,0,0,10"/>
-            <PasswordBox x:Name="txtPass" Height="30" Margin="0,0,0,20"/>
-
-            <Button Content="Войти" Height="35" Click="Login_Click" 
-                Background="#0078D7" Foreground="White"/>
-
-            <TextBlock x:Name="txtStatus" Foreground="Red" Margin="0,10,0,0"/>
-        </StackPanel>
+        <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden"></Frame>
     </Grid>   
 
 </Window>

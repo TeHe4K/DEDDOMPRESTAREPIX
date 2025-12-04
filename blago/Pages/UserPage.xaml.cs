@@ -1,8 +1,5 @@
-﻿using blago.Classes;
-using blago.Pages;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,20 +13,16 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-
-namespace blago
+namespace blago.Pages
 {
-    public partial class MainWindow : Window
+    /// <summary>
+    /// Логика взаимодействия для UserPage.xaml
+    /// </summary>
+    public partial class UserPage : Page
     {
-        public MainWindow()
+        public UserPage()
         {
             InitializeComponent();
-            LoadLoginPage();
-        }
-        private void LoadLoginPage()
-        {
-            Auth loginPage = new Auth();
-            MainFrame.Navigate(loginPage);
         }
     }
 }
