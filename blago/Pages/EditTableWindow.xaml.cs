@@ -1,4 +1,5 @@
 ﻿using blago.Classes;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -67,11 +68,11 @@ namespace blago.Pages
         {
             try
             {
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                using (MySqlConnection conn = DatabaseManager.CreateNewConnection())
                 {
                     conn.Open();
                     string query = $"SELECT COUNT(*) FROM [{_tableName}]";
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
                         int count = (int)cmd.ExecuteScalar();
                         RowCountText.Text = $"Количество записей: {count}";
@@ -109,14 +110,14 @@ namespace blago.Pages
                     WHERE c.object_id = OBJECT_ID(@tableName)
                     ORDER BY c.column_id";
 
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                using (MySqlConnection conn = DatabaseManager.CreateNewConnection())
                 {
                     conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("@tableName", _tableName);
 
-                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        using (MySqlDataReader reader = cmd.ExecuteReader())
                         {
                             ColumnsDataGrid.Items.Clear();
                             _originalColumns.Clear();
@@ -320,11 +321,11 @@ namespace blago.Pages
 
         private void ApplyChanges(string newTableName, List<TableColumn> currentColumns)
         {
-            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            using(MySqlConnection conn = DatabaseManager.CreateNewConnection())
             {
                 conn.Open();
 
-                using (SqlTransaction transaction = conn.BeginTransaction())
+                using (MySqlTransaction transaction = conn.BeginTransaction())
                 {
                     try
                     {
@@ -332,7 +333,7 @@ namespace blago.Pages
                         if (newTableName != _tableName)
                         {
                             string renameQuery = $"EXEC sp_rename '{_tableName}', '{newTableName}'";
-                            using (SqlCommand cmd = new SqlCommand(renameQuery, conn, transaction))
+                            using (MySqlCommand cmd = new MySqlCommand(renameQuery, conn, transaction))
                             {
                                 cmd.ExecuteNonQuery();
                             }
@@ -348,7 +349,7 @@ namespace blago.Pages
                         foreach (var column in deletedColumns)
                         {
                             string dropQuery = $"ALTER TABLE [{_tableName}] DROP COLUMN [{column.ColumnName}]";
-                            using (SqlCommand cmd = new SqlCommand(dropQuery, conn, transaction))
+                            using (MySqlCommand cmd = new MySqlCommand(dropQuery, conn, transaction))
                             {
                                 cmd.ExecuteNonQuery();
                             }
@@ -360,7 +361,7 @@ namespace blago.Pages
                             string nullClause = column.AllowNull ? "NULL" : "NOT NULL";
                             string addQuery = $"ALTER TABLE [{_tableName}] ADD [{column.ColumnName}] {column.DataType} {nullClause}";
 
-                            using (SqlCommand cmd = new SqlCommand(addQuery, conn, transaction))
+                            using (MySqlCommand cmd = new MySqlCommand(addQuery, conn, transaction))
                             {
                                 cmd.ExecuteNonQuery();
                             }
@@ -378,7 +379,7 @@ namespace blago.Pages
                                     string alterQuery = $"ALTER TABLE [{_tableName}] ALTER COLUMN [{currentColumn.ColumnName}] {currentColumn.DataType} " +
                                                        $"{(currentColumn.AllowNull ? "NULL" : "NOT NULL")}";
 
-                                    using (SqlCommand cmd = new SqlCommand(alterQuery, conn, transaction))
+                                    using (MySqlCommand cmd = new MySqlCommand(alterQuery, conn, transaction))
                                     {
                                         cmd.ExecuteNonQuery();
                                     }

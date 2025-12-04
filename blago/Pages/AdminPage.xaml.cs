@@ -1,4 +1,5 @@
 ﻿using blago.Classes;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -24,7 +25,6 @@ namespace blago.Pages
         public AdminPage()
         {
             InitializeComponent();
-            DatabaseManager.Login(DatabaseManager.GetCurrentUsername(), DatabaseManager.GetCurrentPassword());
             LoadTableList();
         }
 
@@ -45,92 +45,54 @@ namespace blago.Pages
         {
             try
             {
-                if (!DatabaseManager.IsUserLoggedIn())
-                    return;
-
-                TableList.Items.Clear();
-
-                // Фильтруем системные таблицы (начинающиеся с "sys" и "MS")
-                string query = @"
-            SELECT TABLE_NAME 
-            FROM INFORMATION_SCHEMA.TABLES 
-            WHERE TABLE_TYPE = 'BASE TABLE'
-            AND TABLE_NAME NOT LIKE 'sys%'  -- Исключаем системные таблицы
-            AND TABLE_NAME NOT LIKE 'MS%'   -- Исключаем таблицы MS
-            AND TABLE_SCHEMA != 'sys'       -- Исключаем схему sys
-            AND TABLE_SCHEMA != 'INFORMATION_SCHEMA' -- Исключаем информационную схему
-            ORDER BY TABLE_NAME";
-
-                // Альтернативный запрос с более полным фильтром:
-                string queryAlternative = @"
-            SELECT 
-                t.name AS TABLE_NAME,
-                s.name AS SCHEMA_NAME
-            FROM sys.tables t
-            JOIN sys.schemas s ON t.schema_id = s.schema_id
-            WHERE t.is_ms_shipped = 0  -- Исключаем системные объекты
-            AND t.name NOT LIKE 'sys%'
-            AND t.name NOT LIKE 'MS%'
-            AND s.name NOT IN ('sys', 'INFORMATION_SCHEMA')
-            ORDER BY s.name, t.name";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                using (var conn = DatabaseManager.CreateNewConnection())
                 {
                     conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
+
+                    string sql = "SHOW TABLES";
+
+                    using (var cmd = new MySqlCommand(sql, conn))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        TableList.Items.Clear();
+
+                        while (reader.Read())
                         {
-                            while (reader.Read())
-                            {
-                                TableList.Items.Add(reader["TABLE_NAME"].ToString());
-                            }
+                            TableList.Items.Add(reader.GetString(0));
                         }
                     }
                 }
 
                 if (TableList.Items.Count > 0)
-                {
                     TableList.SelectedIndex = 0;
-                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке списка таблиц: {ex.Message}");
+                MessageBox.Show("Ошибка: " + ex.Message);
             }
         }
         private void LoadTableData(string tableName)
         {
             try
             {
-                string query = $"SELECT TOP 1000 * FROM [{tableName}]";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                using (var conn = DatabaseManager.CreateNewConnection())
                 {
                     conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
+
+                    string sql = $"SELECT * FROM `{tableName}` LIMIT 1000";
+
+                    using (var cmd = new MySqlCommand(sql, conn))
+                    using (var adapter = new MySqlDataAdapter(cmd))
                     {
-                        DataTable dataTable = new DataTable();
-                        using (SqlDataAdapter adapter = new SqlDataAdapter(cmd))
-                        {
-                            adapter.Fill(dataTable);
-                        }
-
-                        // Устанавливаем источник данных для DataGrid
-                        TableView.ItemsSource = dataTable.DefaultView;
-
-                        // Настраиваем автоматическое изменение ширины столбцов
-                        TableView.AutoGenerateColumns = true;
-                        TableView.CanUserAddRows = false;
-                        TableView.CanUserDeleteRows = false;
-                        TableView.IsReadOnly = true;
+                        DataTable dt = new DataTable();
+                        adapter.Fill(dt);
+                        TableView.ItemsSource = dt.DefaultView;
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке данных таблицы {tableName}: {ex.Message}");
-                TableView.ItemsSource = null;
+                MessageBox.Show("Ошибка загрузки таблицы: " + ex.Message);
             }
         }
 
@@ -234,12 +196,12 @@ namespace blago.Pages
                     FROM INFORMATION_SCHEMA.TABLES 
                     WHERE TABLE_NAME = @tableName";
 
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                using (MySqlConnection conn = DatabaseManager.CreateNewConnection())
                 {
                     conn.Open();
 
                     // Проверяем, существует ли таблица
-                    using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
+                    using (MySqlCommand checkCmd = new MySqlCommand(checkQuery, conn))
                     {
                         checkCmd.Parameters.AddWithValue("@tableName", tableName);
                         int tableCount = (int)checkCmd.ExecuteScalar();
@@ -267,7 +229,7 @@ namespace blago.Pages
                             
                             EXEC sp_executesql @sql;";
 
-                        using (SqlCommand disableCmd = new SqlCommand(disableConstraintsQuery, conn))
+                        using (MySqlCommand disableCmd = new MySqlCommand(disableConstraintsQuery, conn))
                         {
                             disableCmd.Parameters.AddWithValue("@tableName", tableName);
                             disableCmd.ExecuteNonQuery();
@@ -281,7 +243,7 @@ namespace blago.Pages
                     // Удаляем таблицу
                     string deleteQuery = $"DROP TABLE [{tableName}];";
 
-                    using (SqlCommand deleteCmd = new SqlCommand(deleteQuery, conn))
+                    using (MySqlCommand deleteCmd = new MySqlCommand(deleteQuery, conn))
                     {
                         int rowsAffected = deleteCmd.ExecuteNonQuery();
 

@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:blago.Pages"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="AdminPage" HorizontalAlignment="Center" VerticalAlignment="Center">
+      Title="AdminPage" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="800" MaxHeight="450">
 
     <Page.Resources>
         <Color x:Key="DarkBackgroundColor">#FF0F1F1F</Color>
@@ -29,7 +29,6 @@
             <Setter Property="Background" Value="{StaticResource CardBg}"/>
             <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
             <Setter Property="BorderBrush" Value="{StaticResource Teal}"/>
-            <Setter Property="GridLinesVisibility" Value="None"/>
             <Setter Property="RowBackground" Value="#112A2A"/>
             <Setter Property="AlternatingRowBackground" Value="#183535"/>
             <Setter Property="FontSize" Value="16"/>
@@ -119,11 +118,13 @@
     </Page.Resources>
 
     <Grid Background="{StaticResource BgDark}">
-        <DataGrid Margin="181,10,10,42" x:Name="TableView"/>
+        <DataGrid Margin="0,10,10,42" x:Name="TableView" HorizontalAlignment="Right" Width="609" />
         <ListBox Margin="10,10,624,42" x:Name="TableList" SelectionChanged="TableList_SelectionChanged"/>
+        <Grid>
         <Button Content="Add" Margin="181,413,489,10" Width="130" Style="{StaticResource DefaultButton}" Click="AddNote" Height="25"/>
         <Button Content="Delete" Margin="316,413,354,10" Width="130" Style="{StaticResource DefaultButton}" Click="DeleteNote" Height="25"/>
         <Button Content="Edit" Margin="451,413,219,10" Width="130" Style="{StaticResource DefaultButton}" Click="EditNote" Height="25"/>
+        </Grid>
         <Button Content="👤" Margin="763,413,10,10" Style="{StaticResource IconButton}" Click="CreateUser" FontSize="20"/>
         <Button Content="✔" Margin="37,411,734,11" Style="{StaticResource IconButton}" Click="CreateTable" FontSize="20"/>
         <Button Content="✖︎" Margin="79,417,0,13" Style="{StaticResource IconButton}" Click="DeleteTable" FontSize="15" HorizontalAlignment="Left"/>

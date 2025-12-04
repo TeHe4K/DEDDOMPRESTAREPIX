@@ -1,4 +1,5 @@
 ﻿using blago.Classes;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -152,10 +153,10 @@ namespace blago.Pages
                 string sqlQuery = sqlBuilder.ToString();
 
                 // Выполняем SQL запрос
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                using (MySqlConnection conn = DatabaseManager.CreateNewConnection())
                 {
                     conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(sqlQuery, conn))
+                    using (MySqlCommand cmd = new MySqlCommand(sqlQuery, conn))
                     {
                         cmd.ExecuteNonQuery();
                     }
