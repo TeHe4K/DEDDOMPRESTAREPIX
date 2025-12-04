@@ -2,22 +2,12 @@
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace blago.Pages
 {
-
     public partial class CreateTableWindow : Window
     {
         public class ColumnDefinition
@@ -25,7 +15,7 @@ namespace blago.Pages
             public string ColumnName { get; set; }
             public string DataType { get; set; }
             public bool AllowNull { get; set; } = true;
-            public bool IsIdentity { get; set; } = false;
+            public bool IsIdentity { get; set; } = false;   // AUTO_INCREMENT
             public bool IsPrimaryKey { get; set; } = false;
         }
 
@@ -33,11 +23,11 @@ namespace blago.Pages
         {
             InitializeComponent();
 
-            // Добавляем несколько столбцов по умолчанию
+            // Дефолтные столбцы
             dgColumns.Items.Add(new ColumnDefinition
             {
                 ColumnName = "ID",
-                DataType = "int",
+                DataType = "INT",
                 AllowNull = false,
                 IsIdentity = true,
                 IsPrimaryKey = true
@@ -46,14 +36,14 @@ namespace blago.Pages
             dgColumns.Items.Add(new ColumnDefinition
             {
                 ColumnName = "Name",
-                DataType = "nvarchar(100)",
+                DataType = "VARCHAR(100)",
                 AllowNull = false
             });
 
             dgColumns.Items.Add(new ColumnDefinition
             {
                 ColumnName = "CreatedDate",
-                DataType = "datetime",
+                DataType = "DATETIME",
                 AllowNull = false
             });
         }
@@ -67,8 +57,8 @@ namespace blago.Pages
                 return;
             }
 
-            var selectedItem = cmbDataType.SelectedItem as ComboBoxItem;
-            if (selectedItem == null) return;
+            if (!(cmbDataType.SelectedItem is ComboBoxItem selectedItem))
+                return;
 
             string dataType = selectedItem.Content.ToString();
 
@@ -79,17 +69,13 @@ namespace blago.Pages
                 AllowNull = true
             });
 
-            // Очищаем поле для ввода
             txtColumnName.Text = "Column" + (dgColumns.Items.Count + 1);
         }
 
         private void DeleteColumn_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;
-            if (button == null) return;
-
-            var column = button.DataContext as ColumnDefinition;
-            if (column != null)
+            if (button?.DataContext is ColumnDefinition column)
             {
                 dgColumns.Items.Remove(column);
             }
@@ -115,48 +101,43 @@ namespace blago.Pages
             {
                 string tableName = txtTableName.Text.Trim();
 
-                // Строим SQL запрос для создания таблицы
-                StringBuilder sqlBuilder = new StringBuilder();
-                sqlBuilder.AppendLine($"CREATE TABLE [{tableName}] (");
+                StringBuilder sql = new StringBuilder();
+                sql.AppendLine($"CREATE TABLE `{tableName}` (");
 
-                List<string> columnDefinitions = new List<string>();
-                List<string> primaryKeyColumns = new List<string>();
+                List<string> columns = new List<string>();
+                List<string> primaryKeys = new List<string>();
 
-                foreach (ColumnDefinition column in dgColumns.Items)
+                foreach (ColumnDefinition col in dgColumns.Items)
                 {
-                    string columnDef = $"[{column.ColumnName}] {column.DataType}";
+                    string colDef = $"`{col.ColumnName}` {ConvertToMySqlType(col.DataType)}";
 
-                    if (!column.AllowNull)
-                        columnDef += " NOT NULL";
+                    if (!col.AllowNull)
+                        colDef += " NOT NULL";
+                    else
+                        colDef += " NULL";
 
-                    if (column.IsIdentity)
-                        columnDef += " IDENTITY(1,1)";
+                    if (col.IsIdentity)
+                        colDef += " AUTO_INCREMENT";
 
-                    columnDefinitions.Add(columnDef);
+                    columns.Add(colDef);
 
-                    if (column.IsPrimaryKey)
-                        primaryKeyColumns.Add($"[{column.ColumnName}]");
+                    if (col.IsPrimaryKey)
+                        primaryKeys.Add($"`{col.ColumnName}`");
                 }
 
-                sqlBuilder.AppendLine(string.Join(",\n", columnDefinitions));
+                sql.AppendLine(string.Join(",\n", columns));
 
-                // Добавляем первичный ключ, если есть
-                if (primaryKeyColumns.Count > 0)
+                if (primaryKeys.Count > 0)
                 {
-                    sqlBuilder.AppendLine($",CONSTRAINT [PK_{tableName}] PRIMARY KEY CLUSTERED (");
-                    sqlBuilder.AppendLine(string.Join(", ", primaryKeyColumns));
-                    sqlBuilder.AppendLine(")");
+                    sql.AppendLine($", PRIMARY KEY ({string.Join(", ", primaryKeys)})");
                 }
 
-                sqlBuilder.AppendLine(");");
+                sql.AppendLine(") ENGINE=InnoDB DEFAULT CHARSET=utf8;");
 
-                string sqlQuery = sqlBuilder.ToString();
-
-                // Выполняем SQL запрос
                 using (MySqlConnection conn = DatabaseManager.CreateNewConnection())
                 {
                     conn.Open();
-                    using (MySqlCommand cmd = new MySqlCommand(sqlQuery, conn))
+                    using (MySqlCommand cmd = new MySqlCommand(sql.ToString(), conn))
                     {
                         cmd.ExecuteNonQuery();
                     }
@@ -165,12 +146,12 @@ namespace blago.Pages
                 MessageBox.Show($"Таблица '{tableName}' успешно создана!", "Успех",
                     MessageBoxButton.OK, MessageBoxImage.Information);
 
-                this.DialogResult = true;
-                this.Close();
+                DialogResult = true;
+                Close();
             }
-            catch (SqlException sqlEx)
+            catch (MySqlException mysqlEx)
             {
-                MessageBox.Show($"Ошибка SQL: {sqlEx.Message}", "Ошибка создания таблицы",
+                MessageBox.Show($"Ошибка MySQL: {mysqlEx.Message}", "Ошибка создания таблицы",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
@@ -180,10 +161,46 @@ namespace blago.Pages
             }
         }
 
+        private string ConvertToMySqlType(string dataType)
+        {
+            if (string.IsNullOrEmpty(dataType))
+                return "TEXT";
+
+            dataType = dataType.ToLower();
+
+            if (dataType == "int")
+                return "INT";
+
+            if (dataType == "nvarchar(100)")
+                return "VARCHAR(100)";
+
+            if (dataType == "nvarchar(50)")
+                return "VARCHAR(50)";
+
+            if (dataType == "nvarchar(max)")
+                return "TEXT";
+
+            if (dataType == "datetime")
+                return "DATETIME";
+
+            if (dataType == "date")
+                return "DATE";
+
+            if (dataType == "float")
+                return "FLOAT";
+
+            if (dataType == "decimal")
+                return "DECIMAL(10,2)";
+
+            // fallback
+            return dataType.ToUpper();
+        }
+
+
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
-            this.Close();
+            DialogResult = false;
+            Close();
         }
     }
 }

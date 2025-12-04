@@ -1,27 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace blago.Pages
 {
-    
     public partial class ConfirmDeleteWindow : Window
     {
+        private string _tableName;
+
         public ConfirmDeleteWindow()
         {
             InitializeComponent();
         }
-        private string _tableName;
 
         public ConfirmDeleteWindow(string tableName)
         {
@@ -29,7 +20,6 @@ namespace blago.Pages
             _tableName = tableName;
             txtTableName.Text = tableName;
 
-            // Устанавливаем фокус на поле ввода
             Loaded += (s, e) => txtConfirmTableName.Focus();
         }
 
@@ -62,15 +52,15 @@ namespace blago.Pages
         {
             if (txtConfirmTableName.Text.Trim() == _tableName)
             {
-                this.DialogResult = true;
-                this.Close();
+                DialogResult = true;
+                Close();
             }
         }
 
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
-            this.Close();
+            DialogResult = false;
+            Close();
         }
     }
 }
