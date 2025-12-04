@@ -139,7 +139,7 @@
                               
                               Margin="8,0"
                               VerticalAlignment="Center"
-                              IsChecked="True"/>
+                              IsChecked="True" Foreground="White"/>
 
                     <Button Grid.Column="5"
                             Content="Добавить"
