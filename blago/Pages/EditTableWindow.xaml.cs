@@ -18,9 +18,7 @@ using System.Windows.Shapes;
 
 namespace blago.Pages
 {
-    /// <summary>
-    /// Логика взаимодействия для EditTableWindow.xaml
-    /// </summary>
+    
     public partial class EditTableWindow : Window
     {
         public class TableColumn

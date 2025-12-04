@@ -41,8 +41,6 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <!-- Название таблицы -->
         <StackPanel Grid.Row="0">
             <TextBlock Text="Название таблицы:"/>
             <TextBox x:Name="txtTableName" 
@@ -52,8 +50,6 @@
                        Foreground="Gray" 
                        FontSize="11"/>
         </StackPanel>
-
-        <!-- Добавление столбцов -->
         <StackPanel Grid.Row="1" Margin="0,20,0,0">
             <TextBlock Text="Добавить столбец:"/>
             <Grid>
@@ -89,8 +85,6 @@
                         Background="LightGreen"/>
             </Grid>
         </StackPanel>
-
-        <!-- Список добавленных столбцов -->
         <StackPanel Grid.Row="2" Margin="0,20,0,0">
             <TextBlock Text="Столбцы таблицы:"/>
 
@@ -134,8 +128,6 @@
                 </DataGrid>
             </Border>
         </StackPanel>
-
-        <!-- Кнопки действий -->
         <StackPanel Grid.Row="3" 
                     Orientation="Horizontal" 
                     HorizontalAlignment="Right"

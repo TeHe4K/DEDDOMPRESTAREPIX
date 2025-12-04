@@ -18,7 +18,6 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Шапка с информацией о таблице -->
         <Border Grid.Row="0" 
                 BorderBrush="LightBlue" 
                 BorderThickness="1" 
@@ -58,14 +57,12 @@
             </StackPanel>
         </Border>
 
-        <!-- Основной контент - список столбцов -->
         <Grid Grid.Row="1" Margin="0,10,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Панель добавления нового столбца -->
             <Border Grid.Row="0" 
                     BorderBrush="LightGray" 
                     BorderThickness="1" 
@@ -136,7 +133,6 @@
                 </Grid>
             </Border>
 
-            <!-- Список столбцов -->
             <Border Grid.Row="1" 
                     BorderBrush="Gray" 
                     BorderThickness="1" 
@@ -177,7 +173,6 @@
             </Border>
         </Grid>
 
-        <!-- Кнопки действий -->
         <StackPanel Grid.Row="2" 
                     Orientation="Horizontal" 
                     HorizontalAlignment="Right"

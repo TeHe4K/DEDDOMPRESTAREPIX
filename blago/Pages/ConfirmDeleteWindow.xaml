@@ -18,8 +18,6 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <!-- Иконка предупреждения -->
         <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,15">
             <TextBlock Text="⚠️" FontSize="48" HorizontalAlignment="Center" Style="{StaticResource TitleText}" Foreground="#FFDF5757"/>
             <TextBlock Text="ВНИМАНИЕ!" 
@@ -29,8 +27,6 @@
                        HorizontalAlignment="Center"
                        Style="{StaticResource TitleText}"/>
         </StackPanel>
-
-        <!-- Информация о таблице -->
         <StackPanel Grid.Row="1">
             <TextBlock Text="Вы собираетесь удалить таблицу:" 
                        FontWeight="Bold"
@@ -47,8 +43,6 @@
                            HorizontalAlignment="Center" Foreground="{DynamicResource TextLight}"/>
             </Border>
         </StackPanel>
-
-        <!-- Требование ввода названия -->
         <StackPanel Grid.Row="2">
             <TextBlock Text="Для подтверждения введите название таблицы:" 
                        Margin="0,0,0,5" 
@@ -64,8 +58,6 @@
                        FontSize="12"
                        Visibility="Collapsed"/>
         </StackPanel>
-
-        <!-- Кнопки -->
         <StackPanel Grid.Row="3" 
                     Orientation="Horizontal" 
                     HorizontalAlignment="Right"

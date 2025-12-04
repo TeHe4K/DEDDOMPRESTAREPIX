@@ -16,9 +16,7 @@ using System.Windows.Shapes;
 
 namespace blago.Pages
 {
-    /// <summary>
-    /// Логика взаимодействия для CreateTableWindow.xaml
-    /// </summary>
+
     public partial class CreateTableWindow : Window
     {
         public class ColumnDefinition

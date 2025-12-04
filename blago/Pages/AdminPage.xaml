@@ -17,8 +17,6 @@
         <Color x:Key="TextDimColor">#FFB4C8C8</Color>
         <Color x:Key="InputBackgroundColor">#FF1D3535</Color>
         <Color x:Key="InputBorderColor">#FF355555</Color>
-
-        <!-- Brushes -->
         <SolidColorBrush x:Key="BgDark" Color="{StaticResource DarkBackgroundColor}"/>
         <SolidColorBrush x:Key="CardBg" Color="{StaticResource CardBackgroundColor}"/>
         <SolidColorBrush x:Key="Mint" Color="{StaticResource AccentMintColor}"/>
@@ -27,10 +25,6 @@
         <SolidColorBrush x:Key="TextDim" Color="{StaticResource TextDimColor}"/>
         <SolidColorBrush x:Key="InputBg" Color="{StaticResource InputBackgroundColor}"/>
         <SolidColorBrush x:Key="InputBorder" Color="{StaticResource InputBorderColor}"/>
-
-        <!-- =================================================================== -->
-        <!--                             DataGrid                                -->
-        <!-- =================================================================== -->
         <Style TargetType="DataGrid">
             <Setter Property="Background" Value="{StaticResource CardBg}"/>
             <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
@@ -49,10 +43,6 @@
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Padding" Value="8"/>
         </Style>
-
-        <!-- =================================================================== -->
-        <!--                             ListBox                                 -->
-        <!-- =================================================================== -->
         <Style TargetType="ListBox">
             <Setter Property="Background" Value="{StaticResource CardBg}"/>
             <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
@@ -60,7 +50,6 @@
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="Padding" Value="5"/>
         </Style>
-
         <Style TargetType="ListBoxItem">
             <Setter Property="Padding" Value="8"/>
             <Setter Property="Margin" Value="3"/>
@@ -68,7 +57,6 @@
             <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="{StaticResource Teal}"/>
@@ -80,10 +68,6 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-
-        <!-- =================================================================== -->
-        <!--                             Buttons                                 -->
-        <!-- =================================================================== -->
         <Style x:Key="DefaultButton" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource Teal}"/>
             <Setter Property="Foreground" Value="White"/>
@@ -92,7 +76,6 @@
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Height" Value="40"/>
-
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -103,7 +86,6 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#347F7D"/>
@@ -113,7 +95,6 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
@@ -129,28 +110,20 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Foreground" Value="{StaticResource Mint}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
-
     </Page.Resources>
-
-    <!-- =================================================================== -->
-    <!--                            LAYOUT                                   -->
-    <!-- =================================================================== -->
 
     <Grid Background="{StaticResource BgDark}">
         <DataGrid Margin="181,10,10,42" x:Name="TableView"/>
         <ListBox Margin="10,10,624,42" x:Name="TableList" SelectionChanged="TableList_SelectionChanged"/>
-
         <Button Content="Add" Margin="181,413,489,10" Width="130" Style="{StaticResource DefaultButton}" Click="AddNote" Height="25"/>
         <Button Content="Delete" Margin="316,413,354,10" Width="130" Style="{StaticResource DefaultButton}" Click="DeleteNote" Height="25"/>
         <Button Content="Edit" Margin="451,413,219,10" Width="130" Style="{StaticResource DefaultButton}" Click="EditNote" Height="25"/>
-
         <Button Content="👤" Margin="763,413,10,10" Style="{StaticResource IconButton}" Click="CreateUser" FontSize="20"/>
         <Button Content="✔" Margin="37,411,734,11" Style="{StaticResource IconButton}" Click="CreateTable" FontSize="20"/>
         <Button Content="✖︎" Margin="79,417,0,13" Style="{StaticResource IconButton}" Click="DeleteTable" FontSize="15" HorizontalAlignment="Left"/>

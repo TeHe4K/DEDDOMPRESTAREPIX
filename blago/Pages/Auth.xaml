@@ -9,11 +9,6 @@
       Title="Auth" KeyDown="Enter"  Background="{StaticResource BgDark}">
 
     <Page.Resources>
-
-
-        <!-- ========================= -->
-        <!--      DataGrid STYLE       -->
-        <!-- ========================= -->
         <Style TargetType="DataGrid">
             <Setter Property="Background" Value="{StaticResource CardBg}"/>
             <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
@@ -32,10 +27,6 @@
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Padding" Value="8"/>
         </Style>
-
-        <!-- ========================= -->
-        <!--       ListBox STYLE       -->
-        <!-- ========================= -->
         <Style TargetType="ListBox">
             <Setter Property="Background" Value="{StaticResource CardBg}"/>
             <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
@@ -63,11 +54,6 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-
-
-        <!-- ========================= -->
-        <!--       Icon Buttons        -->
-        <!-- ========================= -->
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
             <Setter Property="Background" Value="Transparent"/>

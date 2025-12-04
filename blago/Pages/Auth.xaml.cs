@@ -16,9 +16,7 @@ using System.Windows.Shapes;
 
 namespace blago.Pages
 {
-    /// <summary>
-    /// Логика взаимодействия для Auth.xaml
-    /// </summary>
+    
     public partial class Auth : Page
     {
         public Auth()
