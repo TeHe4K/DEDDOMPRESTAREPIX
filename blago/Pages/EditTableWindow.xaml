@@ -5,70 +5,88 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:blago.Pages"
         mc:Ignorable="d"
-        Title="Редактирование таблицы" 
-        Height="500" 
+        Title="Редактирование таблицы"
+        Height="500"
         Width="700"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        Background="{StaticResource BgDark}">
 
-    <Grid Margin="10">
+    <!-- Подключение Style.xaml -->
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/blago;component/Style.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+
+    <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" 
-                BorderBrush="LightBlue" 
-                BorderThickness="1" 
-                CornerRadius="5" 
-                Padding="10"
-                Background="#F0F8FF">
+
+        <!-- ───── БЛОК ИНФОРМАЦИИ ───── -->
+        <Border Background="{StaticResource CardBg}"
+                CornerRadius="14"
+                Padding="14"
+                Grid.Row="0">
+
             <StackPanel>
-                <TextBlock Text="Редактирование таблицы:" 
-                           FontSize="16" 
+                <TextBlock Text="Редактирование таблицы:"
+                           Foreground="{StaticResource TextLight}"
+                           FontSize="18"
                            FontWeight="Bold"/>
 
-                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                    <TextBlock Text="Текущее имя:" 
-                               FontWeight="SemiBold"/>
-                    <TextBlock x:Name="CurrentTableNameText" 
-                               Text="TableName" 
-                               FontSize="14" 
-                               Foreground="Blue"
-                               FontWeight="Bold"
-                               Margin="5,0,0,0"/>
+                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                    <TextBlock Text="Текущее имя:"
+                               Foreground="{StaticResource TextDim}"
+                               FontSize="14"/>
+                    <TextBlock x:Name="CurrentTableNameText"
+                               Text="TableName"
+                               Margin="6,0,0,0"
+                               Foreground="{StaticResource Mint}"
+                               FontWeight="SemiBold"
+                               FontSize="14"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                    <TextBlock Text="Новое имя:" 
-                               FontWeight="SemiBold"/>
-                    <TextBox x:Name="NewTableNameTextBox" 
-                             Text="NewTableName" 
-                             Width="150"
-                             Margin="5,0,0,0"/>
+                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                    <TextBlock Text="Новое имя:"
+                               Foreground="{StaticResource TextDim}"
+                               FontSize="14"/>
+
+                    <TextBox x:Name="NewTableNameTextBox"
+                             Style="{StaticResource InputBoxStyle}"
+                             Width="160"
+                             Margin="6,0,0,0"/>
                 </StackPanel>
 
-                <TextBlock x:Name="RowCountText" 
-                           Text="" 
-                           FontSize="12" 
-                           Foreground="Gray"
-                           Margin="0,5,0,0"/>
+                <TextBlock x:Name="RowCountText"
+                           Text=""
+                           Foreground="{StaticResource TextDim}"
+                           FontSize="12"
+                           Margin="0,6,0,0"/>
             </StackPanel>
         </Border>
 
-        <Grid Grid.Row="1" Margin="0,10,0,0">
+
+        <!-- ───── БЛОК ДОБАВЛЕНИЯ СТОЛБЦОВ ───── -->
+        <Grid Grid.Row="1" Margin="0,12,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" 
-                    BorderBrush="LightGray" 
-                    BorderThickness="1" 
-                    CornerRadius="3" 
-                    Padding="10"
-                    Background="#F5F5F5">
+            <!-- Панель добавления -->
+            <Border Background="{StaticResource CardBg}"
+                    CornerRadius="14"
+                    Padding="12"
+                    Grid.Row="0">
+
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -80,27 +98,31 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" 
-                               Text="Имя:" 
+                    <TextBlock Grid.Column="0"
+                               Text="Имя:"
+                               Foreground="{StaticResource TextDim}"
+                               VerticalAlignment="Center"/>
+
+                    <TextBox Grid.Column="1"
+                             x:Name="NewColumnNameTextBox"
+                             Style="{StaticResource InputBoxStyle}"
+                             Width="160"
+                             Margin="6,0"
+                             VerticalAlignment="Center"/>
+
+                    <TextBlock Grid.Column="2"
+                               Text="Тип:"
+                               Foreground="{StaticResource TextDim}"
                                VerticalAlignment="Center"
-                               Margin="0,0,5,0"/>
+                               Margin="8,0"/>
 
-                    <TextBox Grid.Column="1" 
-                             x:Name="NewColumnNameTextBox" 
-                             Text="NewColumn"
-                             VerticalAlignment="Center"
-                             Margin="0,0,5,0"/>
-
-                    <TextBlock Grid.Column="2" 
-                               Text="Тип:" 
-                               VerticalAlignment="Center"
-                               Margin="0,0,5,0"/>
-
-                    <ComboBox Grid.Column="3" 
+                    <ComboBox Grid.Column="3"
                               x:Name="DataTypeComboBox"
+                              Style="{StaticResource ComboBoxStyle}"
                               SelectedIndex="0"
-                              Width="120"
-                              Margin="0,0,5,0">
+                              Width="160"
+                              Margin="6,0">
+
                         <ComboBoxItem Content="int"/>
                         <ComboBoxItem Content="varchar(50)"/>
                         <ComboBoxItem Content="nvarchar(100)"/>
@@ -111,82 +133,92 @@
                         <ComboBoxItem Content="bit"/>
                     </ComboBox>
 
-                    <CheckBox Grid.Column="4" 
-                              x:Name="AllowNullCheckBox" 
+                    <CheckBox Grid.Column="4"
+                              x:Name="AllowNullCheckBox"
                               Content="NULL"
-                              IsChecked="True"
+                              
+                              Margin="8,0"
                               VerticalAlignment="Center"
-                              Margin="0,0,5,0"/>
+                              IsChecked="True"/>
 
-                    <Button Grid.Column="5" 
-                            Content="Добавить" 
-                            Click="AddColumnButton_Click" 
-                            Width="80"
-                            Background="LightGreen"
-                            Margin="0,0,5,0"/>
+                    <Button Grid.Column="5"
+                            Content="Добавить"
+                            Width="100"
+                            Margin="8,0"
+                            Style="{StaticResource PrimaryButton}"
+                            Click="AddColumnButton_Click"/>
 
-                    <Button Grid.Column="6" 
-                            Content="Очистить" 
-                            Click="ClearColumnsButton_Click" 
-                            Width="80"
-                            Background="LightGray"/>
+                    <Button Grid.Column="6"
+                            Content="Очистить"
+                            Width="100"
+                            Margin="8,0"
+                            Style="{StaticResource DeleteButton}"
+                            Click="ClearColumnsButton_Click"/>
                 </Grid>
             </Border>
 
-            <Border Grid.Row="1" 
-                    BorderBrush="Gray" 
-                    BorderThickness="1" 
-                    CornerRadius="3"
-                    Margin="0,10,0,0">
+
+            <!-- Таблица -->
+            <Border Background="{StaticResource CardBg}"
+                    CornerRadius="14"
+                    Padding="8"
+                    Grid.Row="1"
+                    Margin="0,12,0,0">
+
                 <DataGrid x:Name="ColumnsDataGrid"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           CanUserDeleteRows="True"
-                          CanUserReorderColumns="False"
+                          HeadersVisibility="Column"
+                          Background="{StaticResource CardBg}"
+                          BorderThickness="0"
+                          Foreground="{StaticResource TextLight}"
                           SelectionMode="Single"
-                          SelectionUnit="FullRow">
+                          RowBackground="{StaticResource CardBg}"
+                          AlternatingRowBackground="#11222222"
+                          Style="{StaticResource ModernDataGrid}">
+
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Имя столбца" 
-                                            Binding="{Binding ColumnName}" 
-                                            Width="*"/>
-                        <DataGridTextColumn Header="Тип данных" 
-                                            Binding="{Binding DataType}" 
-                                            Width="120"/>
-                        <DataGridCheckBoxColumn Header="NULL" 
-                                                Binding="{Binding AllowNull}"
-                                                Width="60"/>
-                        <DataGridCheckBoxColumn Header="PK" 
-                                                Binding="{Binding IsPrimaryKey}"
-                                                Width="60"/>
-                        <DataGridTemplateColumn Header="Действия" Width="100">
+                        <DataGridTextColumn Header="Имя столбца" Binding="{Binding ColumnName}" Width="*"/>
+                        <DataGridTextColumn Header="Тип данных" Binding="{Binding DataType}" Width="150"/>
+                        <DataGridCheckBoxColumn Header="NULL" Binding="{Binding AllowNull}" Width="60"/>
+                        <DataGridCheckBoxColumn Header="PK" Binding="{Binding IsPrimaryKey}" Width="60"/>
+
+                        <DataGridTemplateColumn Header="Действия" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Button Content="Удалить" 
-                                            Click="DeleteColumnButton_Click"
-                                            Background="LightCoral"
-                                            Padding="5,2"/>
+                                    <Button Content="Удалить"
+                                            Style="{StaticResource DeleteButton}"
+                                            Padding="6 2"
+                                            Click="DeleteColumnButton_Click"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
+
                 </DataGrid>
             </Border>
+
         </Grid>
 
-        <StackPanel Grid.Row="2" 
-                    Orientation="Horizontal" 
+
+        <!-- ───── НИЖНИЕ КНОПКИ ───── -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Margin="0,15,0,0">
-            <Button Content="Сохранить" 
-                    Click="SaveButton_Click" 
-                    Width="100"
-                    Background="LightGreen"
-                    FontWeight="Bold"/>
-            <Button Content="Отмена" 
-                    Click="CancelButton_Click" 
-                    Width="80"
-                    Background="LightGray"
-                    Margin="10,0,0,0"/>
+                    Margin="0,16,0,0">
+
+            <Button Content="Сохранить"
+                    Width="140"
+                    Style="{StaticResource PrimaryButton}"
+                    Click="SaveButton_Click"/>
+
+            <Button Content="Отмена"
+                    Width="120"
+                    Margin="12,0,0,0"
+                    Style="{StaticResource DeleteButton}"
+                    Click="CancelButton_Click"/>
         </StackPanel>
+
     </Grid>
 </Window>
