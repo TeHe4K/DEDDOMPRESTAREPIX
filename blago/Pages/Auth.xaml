@@ -6,146 +6,118 @@
       xmlns:local="clr-namespace:blago.Pages"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="Auth" KeyDown="Enter" Background="{DynamicResource DarkBackground}">
+      Title="Auth" KeyDown="Enter"  Background="{StaticResource BgDark}">
 
     <Page.Resources>
-        <Color x:Key="DarkBackgroundColor">#FF0F1F1F</Color>
-        <Color x:Key="CardBackgroundColor">#FF162A2A</Color>
-        <Color x:Key="AccentMintColor">#FFA9F5D0</Color>
-        <Color x:Key="PrimaryTealColor">#FF2C7A78</Color>
-        <Color x:Key="TextLightColor">#FFFFFFFF</Color>
-        <Color x:Key="TextDimColor">#FFB4C8C8</Color>
-        <Color x:Key="InputBackgroundColor">#FF1D3535</Color>
-        <Color x:Key="InputBorderColor">#FF355555</Color>
 
-        <SolidColorBrush x:Key="DarkBackground" Color="{StaticResource DarkBackgroundColor}"/>
-        <SolidColorBrush x:Key="CardBackground" Color="{StaticResource CardBackgroundColor}"/>
-        <SolidColorBrush x:Key="AccentMint" Color="{StaticResource AccentMintColor}"/>
-        <SolidColorBrush x:Key="PrimaryTeal" Color="{StaticResource PrimaryTealColor}"/>
-        <SolidColorBrush x:Key="TextLight" Color="{StaticResource TextLightColor}"/>
-        <SolidColorBrush x:Key="TextDim" Color="{StaticResource TextDimColor}"/>
-        <SolidColorBrush x:Key="InputBg" Color="{StaticResource InputBackgroundColor}"/>
-        <SolidColorBrush x:Key="InputBorder" Color="{StaticResource InputBorderColor}"/>
-        <Thickness x:Key="DefaultPadding">12</Thickness>
-        <CornerRadius x:Key="CardRadius">12</CornerRadius>
-        <FontFamily x:Key="UiFont">Segoe UI</FontFamily>
 
-        <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="CornerRadius" Value="14"/>
-            <Setter Property="Padding" Value="28"/>
-            <Setter Property="Background" Value="{StaticResource CardBackground}"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect BlurRadius="30" ShadowDepth="0" Color="#88000000"/>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="TitleText" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
-            <Setter Property="FontSize" Value="26"/>
+        <!-- ========================= -->
+        <!--      DataGrid STYLE       -->
+        <!-- ========================= -->
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="{StaticResource CardBg}"/>
             <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-        </Style>
-
-        <Style x:Key="CaptionText" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="{StaticResource TextDim}"/>
-        </Style>
-
-        <Style x:Key="InputBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="{StaticResource InputBg}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
-            <Setter Property="BorderThickness" Value="1.3"/>
-            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          Margin="{TemplateBinding Padding}"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="PasswordBoxStyle" TargetType="PasswordBox">
-            <Setter Property="Background" Value="{StaticResource InputBg}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
-            <Setter Property="BorderThickness" Value="1.3"/>
-            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="PasswordBox">
-                        <Border Background="{TemplateBinding Background}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="{TemplateBinding BorderThickness}"
-                    CornerRadius="10">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                              Margin="{TemplateBinding Padding}"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="PrimaryButton" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource AccentMint}"/>
-            <Setter Property="Foreground" Value="#FF0F1F1F"/>
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="RowBackground" Value="#112A2A"/>
+            <Setter Property="AlternatingRowBackground" Value="#183535"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Teal}"/>
             <Setter Property="FontSize" Value="16"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#193939"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="#233F3F"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+
+        <!-- ========================= -->
+        <!--       ListBox STYLE       -->
+        <!-- ========================= -->
+        <Style TargetType="ListBox">
+            <Setter Property="Background" Value="{StaticResource CardBg}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="Background" Value="#112A2A"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Teal}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1F4444"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+
+        <!-- ========================= -->
+        <!--       Icon Buttons        -->
+        <!-- ========================= -->
+        <Style x:Key="IconButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="22"/>
+
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="10">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                        <Border Background="Transparent">
+                            <ContentPresenter VerticalAlignment="Center"
+                                          HorizontalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect BlurRadius="15" ShadowDepth="0" Color="#55000000"/>
-                </Setter.Value>
-            </Setter>
+
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource Mint}"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </Page.Resources>
 
-    <Grid Background="{StaticResource DarkBackground}" Margin="24">
+    <Grid Background="{DynamicResource BgDark}" Margin="24">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="75*"/>
             <ColumnDefinition Width="113*"/>
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0" Margin="12,12,12,12">
-            <Border Background="{DynamicResource CardBackground}" CornerRadius="12" Padding="18">
-                <Grid Background="{DynamicResource CardBackground}">
+            <Border Background="{DynamicResource CardBg}" CornerRadius="12" Padding="18">
+                <Grid Background="{DynamicResource CardBg}" VerticalAlignment="Top" Height="336" Margin="0,10,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="260" >
                         <Grid Height="120" Width="120" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Image Source="/Image/LogoNew.png" Margin="-34,-71,-34,4"/>
+                            <Image Source="/Image/LogoNew.png" Margin="-25,-40,-25,-2"/>
                             <TextBlock FontFamily="{StaticResource UiFont}" 
                                        FontWeight="Bold" Foreground="White"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18"/>
                         </Grid>
-                            <TextBlock Text="Панель управления базами данных" TextAlignment="Center"
+                        <TextBlock Text="Панель управления базами данных" TextAlignment="Center"
                                        Margin="0,18,0,0" Style="{StaticResource CaptionText}" Foreground="White" Opacity="0.95" FontSize="14"/>
+                        <TextBlock Text="Предупреждение!" TextAlignment="Center"
+                                Margin="0,18,0,0" Style="{StaticResource CaptionText}" Foreground="#FFDF5757" Opacity="0.95" FontSize="14" FontWeight="Bold"/>
+                        <TextBlock Text="Д4нн0е пр0гр4ммн0е 06еспечение с0здан0  8  &#x0a; р43влек4тельнb|х целяX и не несет ник4к0й &#x0a;смысл0в0Z~ н4Lру3ки!;" TextAlignment="Center"
+                             Margin="0,18,0,0" Style="{StaticResource CaptionText}" Foreground="#FFDF5757" Opacity="0.95" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -168,7 +140,7 @@
                             </Grid.ColumnDefinitions>
                         </Grid>
                         <Button x:Name="LoginButton" Content="Войти" Style="{StaticResource PrimaryButton}"
-                                Margin="0,18,0,8" Height="44" Click="Login_Click" Background="{DynamicResource AccentMint}"/>
+                                Margin="0,18,0,8" Height="44" Click="Login_Click" Background="{DynamicResource Mint}"/>
                         <TextBlock Text="Вход только для сотрудников компании" Style="{StaticResource CaptionText}"
                                    HorizontalAlignment="Center" Margin="0,8,0,0"/>
                     </StackPanel>

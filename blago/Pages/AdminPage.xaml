@@ -8,28 +8,153 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="AdminPage" HorizontalAlignment="Center" VerticalAlignment="Center">
 
-    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Grid.Background>
-            <ImageBrush ImageSource="/Image/LogIn_BG.png" Stretch="UniformToFill" TileMode="Tile">
-                <ImageBrush.RelativeTransform>
-                    <TransformGroup>
-                        <ScaleTransform CenterY="0.5" CenterX="0.5" ScaleX="0.5" ScaleY="0.5"/>
-                        <SkewTransform CenterX="0.5" CenterY="0.5"/>
-                        <RotateTransform CenterX="0.5" CenterY="0.5"/>
-                        <TranslateTransform/>
-                    </TransformGroup>
-                </ImageBrush.RelativeTransform>
-            </ImageBrush>
-        </Grid.Background>
-        <DataGrid Margin="181,10,10,42" Height="398" Width="609" x:Name="TableView" AutoGenerateColumns="True"/>
-        <ListBox Margin="10,10,624,42" Width="166" x:Name="TableList" SelectionChanged="TableList_SelectionChanged" Background="{x:Null}" BorderBrush="{x:Null}" FontSize="20" Foreground="#FFE2E2E2" FontWeight="Bold"/>
-        <Button Content="Button" Margin="181,413,489,10"  Height="27" Width="130" Click="AddNote"/>
-        <Button Content="Button" Margin="316,413,354,10"  Height="27" Width="130" Click="DeleteNote"/>
-        <Button Content="Button"  Margin="451,413,219,10"  Height="27" Width="130" Click="EditNote"/>
-        <Button Content="👤"  Margin="763,413,10,10"  Height="27" Width="27" Click="CreateUser" Background="{x:Null}" BorderBrush="{x:Null}" FontWeight="Bold" FontSize="18"  Foreground="#FFE2E2E2"/>
-        <Button Content="+" Margin="37,408,730,10" Click="CreateTable" Background="{x:Null}" BorderBrush="{x:Null}" FontWeight="Bold" FontSize="20" VerticalContentAlignment="Center" RenderTransformOrigin="0.455,0.383"  Foreground="#FFE2E2E2"/>
-        <Button Content="-" Margin="75,408,692,10" Click="DeleteTable" ToolTip="Удалить выбранную таблицу" Background="{x:Null}" BorderBrush="{x:Null}" FontWeight="Bold" FontSize="20" VerticalContentAlignment="Center"  Foreground="#FFE2E2E2"/>
-        <Button Content="✎" Margin="113,408,654,10" Click="EditTable" BorderBrush="{x:Null}" Background="{x:Null}" FontWeight="Bold" FontSize="18" Foreground="#FFE2E2E2"/>
+    <Page.Resources>
+        <Color x:Key="DarkBackgroundColor">#FF0F1F1F</Color>
+        <Color x:Key="CardBackgroundColor">#FF162A2A</Color>
+        <Color x:Key="AccentMintColor">#FFA9F5D0</Color>
+        <Color x:Key="PrimaryTealColor">#FF2C7A78</Color>
+        <Color x:Key="TextLightColor">#FFFFFFFF</Color>
+        <Color x:Key="TextDimColor">#FFB4C8C8</Color>
+        <Color x:Key="InputBackgroundColor">#FF1D3535</Color>
+        <Color x:Key="InputBorderColor">#FF355555</Color>
 
+        <!-- Brushes -->
+        <SolidColorBrush x:Key="BgDark" Color="{StaticResource DarkBackgroundColor}"/>
+        <SolidColorBrush x:Key="CardBg" Color="{StaticResource CardBackgroundColor}"/>
+        <SolidColorBrush x:Key="Mint" Color="{StaticResource AccentMintColor}"/>
+        <SolidColorBrush x:Key="Teal" Color="{StaticResource PrimaryTealColor}"/>
+        <SolidColorBrush x:Key="TextLight" Color="{StaticResource TextLightColor}"/>
+        <SolidColorBrush x:Key="TextDim" Color="{StaticResource TextDimColor}"/>
+        <SolidColorBrush x:Key="InputBg" Color="{StaticResource InputBackgroundColor}"/>
+        <SolidColorBrush x:Key="InputBorder" Color="{StaticResource InputBorderColor}"/>
+
+        <!-- =================================================================== -->
+        <!--                             DataGrid                                -->
+        <!-- =================================================================== -->
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="{StaticResource CardBg}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Teal}"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="RowBackground" Value="#112A2A"/>
+            <Setter Property="AlternatingRowBackground" Value="#183535"/>
+            <Setter Property="FontSize" Value="16"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#193939"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="#233F3F"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+
+        <!-- =================================================================== -->
+        <!--                             ListBox                                 -->
+        <!-- =================================================================== -->
+        <Style TargetType="ListBox">
+            <Setter Property="Background" Value="{StaticResource CardBg}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="Background" Value="#112A2A"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Teal}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1F4444"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- =================================================================== -->
+        <!--                             Buttons                                 -->
+        <!-- =================================================================== -->
+        <Style x:Key="DefaultButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource Teal}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="40"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="8" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#347F7D"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#1E5554"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="IconButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="Transparent">
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource Mint}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Page.Resources>
+
+    <!-- =================================================================== -->
+    <!--                            LAYOUT                                   -->
+    <!-- =================================================================== -->
+
+    <Grid Background="{StaticResource BgDark}">
+        <DataGrid Margin="181,10,10,42" x:Name="TableView"/>
+        <ListBox Margin="10,10,624,42" x:Name="TableList" SelectionChanged="TableList_SelectionChanged"/>
+
+        <Button Content="Add" Margin="181,413,489,10" Width="130" Style="{StaticResource DefaultButton}" Click="AddNote" Height="25"/>
+        <Button Content="Delete" Margin="316,413,354,10" Width="130" Style="{StaticResource DefaultButton}" Click="DeleteNote" Height="25"/>
+        <Button Content="Edit" Margin="451,413,219,10" Width="130" Style="{StaticResource DefaultButton}" Click="EditNote" Height="25"/>
+
+        <Button Content="👤" Margin="763,413,10,10" Style="{StaticResource IconButton}" Click="CreateUser" FontSize="20"/>
+        <Button Content="✔" Margin="37,411,734,11" Style="{StaticResource IconButton}" Click="CreateTable" FontSize="20"/>
+        <Button Content="✖︎" Margin="79,417,0,13" Style="{StaticResource IconButton}" Click="DeleteTable" FontSize="15" HorizontalAlignment="Left"/>
+        <Button Content="✎" Margin="114,414,0,11" Style="{StaticResource IconButton}" Click="EditTable" FontSize="20"  HorizontalAlignment="Left" VerticalContentAlignment="Center"/>
     </Grid>
+
 </Page>
