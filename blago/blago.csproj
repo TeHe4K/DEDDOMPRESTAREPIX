@@ -149,12 +149,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Image\LogIn_BG.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Image\Logo.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Image\LogoNew.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

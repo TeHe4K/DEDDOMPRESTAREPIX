@@ -140,7 +140,7 @@
                             </Grid.ColumnDefinitions>
                         </Grid>
                         <Button x:Name="LoginButton" Content="Войти" Style="{StaticResource PrimaryButton}"
-                                Margin="0,18,0,8" Height="44" Click="Login_Click" Background="{DynamicResource Mint}"/>
+                                Margin="0,18,0,8" Height="44" Click="Login_Click" Background="{DynamicResource Teal}"/>
                         <TextBlock Text="Вход только для сотрудников компании" Style="{StaticResource CaptionText}"
                                    HorizontalAlignment="Center" Margin="0,8,0,0"/>
                     </StackPanel>
