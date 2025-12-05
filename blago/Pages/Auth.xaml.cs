@@ -1,51 +1,84 @@
 ﻿using blago.Classes;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace blago.Pages
 {
-    
     public partial class Auth : Page
     {
         public Auth()
         {
             InitializeComponent();
-        }
 
+           
+        }
 
         private void Login_Click(object sender, RoutedEventArgs e)
         {
-            string username = txtUser.Text;
+            string username = txtUser.Text.Trim();
             string password = txtPass.Password;
 
-            if (DatabaseManager.Login(username, password))
+            if (string.IsNullOrEmpty(username))
             {
-                if (DatabaseManager.IsAdmin())
+                MessageBox.Show("Введите логин", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtUser.Focus();
+                return;
+            }
+
+            if (string.IsNullOrEmpty(password))
+            {
+                MessageBox.Show("Введите пароль", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtPass.Focus();
+                return;
+            }
+
+            try
+            {
+                // 1. Стандартная авторизация
+                if (DatabaseManager.Login(username, password))
                 {
-                    AdminPage adminPage = new AdminPage();
-                    this.NavigationService.Navigate(adminPage);
+                    // 2. Получаем статус из DatabaseManager (уже определен в Login)
+                    bool isAdmin = DatabaseManager.IsAdmin();
+
+                    // 3. Для надежности проверяем через таблицу UserAdmins
+                    if (!isAdmin)
+                    {
+                        isAdmin = DatabaseManager.IsUserAdminInDatabase(username);
+
+                        // Обновляем статус если нашли в таблице
+                        if (isAdmin)
+                        {
+                            DatabaseManager.IsAdmin();
+                        }
+                    }
+
+                    // 4. Перенаправление
+                    if (isAdmin)
+                    {
+                        AdminPage adminPage = new AdminPage();
+                        this.NavigationService.Navigate(adminPage);
+                    }
+                    else
+                    {
+                        UserPage userPage = new UserPage();
+                        this.NavigationService.Navigate(userPage);
+                    }
                 }
                 else
                 {
-                    UserPage userPage = new UserPage();
-                    this.NavigationService.Navigate(userPage);
+                    MessageBox.Show("Неверный логин или пароль",
+                        "Ошибка авторизации",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Ошибка авторизации");
+                MessageBox.Show($"Ошибка при входе: {ex.Message}",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

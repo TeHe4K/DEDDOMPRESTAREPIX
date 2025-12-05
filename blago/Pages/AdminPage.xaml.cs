@@ -387,7 +387,16 @@ namespace blago.Pages
 
         private void CreateUser(object sender, RoutedEventArgs e)
         {
-
+            try
+            {
+                var userManagementWindow = new UserManagementWindow();
+                userManagementWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при открытии управления пользователями: {ex.Message}",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void CreateTable(object sender, RoutedEventArgs e)

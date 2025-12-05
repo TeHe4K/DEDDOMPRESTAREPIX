@@ -1,0 +1,147 @@
+﻿<Window x:Class="blago.Pages.UserManagementWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:blago.Pages"
+        mc:Ignorable="d"
+        Title="Управление пользователями" 
+        Height="700" 
+        Width="900"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+    
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Управление пользователями" 
+                       FontSize="18" 
+                       FontWeight="Bold"
+                       Foreground="DarkBlue"/>
+        </StackPanel>
+
+        <!-- Основной контент -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Список пользователей -->
+            <Border Grid.Column="0" 
+                    BorderBrush="LightGray" 
+                    BorderThickness="1" 
+                    Margin="0,0,5,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
+                        <Button Content="➕ Новый" 
+                                Click="AddUserButton_Click" 
+                                Padding="10,5"
+                                Background="LightGreen"/>
+                        <Button Content="🗑️ Удалить" 
+                                Click="DeleteUserButton_Click" 
+                                Padding="10,5"
+                                Background="LightCoral"
+                                Margin="5,0,0,0"/>
+                    </StackPanel>
+
+                    <DataGrid x:Name="UsersGrid" 
+                              Grid.Row="1" 
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              SelectionMode="Single"
+                              SelectionChanged="UsersGrid_SelectionChanged"
+                              Margin="5">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Логин" Binding="{Binding Username}" Width="*"/>
+                            <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="*"/>
+                            <DataGridCheckBoxColumn Header="Активен" Binding="{Binding IsActive}" Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <!-- Права доступа -->
+            <Border Grid.Column="1" 
+                    BorderBrush="LightGray" 
+                    BorderThickness="1" 
+                    Margin="5,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
+                        <TextBlock x:Name="SelectedUserText" 
+                                   Text="Выберите пользователя" 
+                                   FontWeight="Bold"
+                                   FontSize="14"/>
+                    </StackPanel>
+
+                    <DataGrid x:Name="PermissionsGrid" 
+                              Grid.Row="1" 
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              Margin="5">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Таблица" 
+                                                Binding="{Binding TableName}" 
+                                                Width="*" 
+                                                IsReadOnly="True"/>
+                            <DataGridCheckBoxColumn Header="Просмотр" 
+                                                    Binding="{Binding CanView}" 
+                                                    Width="80"/>
+                            <DataGridCheckBoxColumn Header="Добавление" 
+                                                    Binding="{Binding CanAdd}" 
+                                                    Width="80"/>
+                            <DataGridCheckBoxColumn Header="Редактирование" 
+                                                    Binding="{Binding CanEdit}" 
+                                                    Width="80"/>
+                            <DataGridCheckBoxColumn Header="Удаление" 
+                                                    Binding="{Binding CanDelete}" 
+                                                    Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="2" 
+                                Orientation="Horizontal" 
+                                HorizontalAlignment="Right"
+                                Margin="5">
+                        <Button Content="Сохранить права" 
+                                Click="SavePermissionsButton_Click" 
+                                Width="120"
+                                Background="LightBlue"
+                                IsEnabled="False"
+                                x:Name="SavePermissionsButton"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Кнопки -->
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right"
+                    Margin="0,10,0,0">
+            <Button Content="Закрыть" 
+                    Click="CloseButton_Click" 
+                    Width="80"
+                    Background="LightGray"/>
+        </StackPanel>
+    </Grid>
+</Window>
