@@ -599,7 +599,7 @@ namespace blago.Classes
                 throw new Exception($"Ошибка при изменении пароля: {ex.Message}");
             }
         }
-
+        // 1111
         public static bool GrantDatabaseRole(string userName, string roleName)
         {
             try
