@@ -382,6 +382,7 @@ namespace blago.Classes
                         ) THEN 1
                         ELSE 0
                     END";
+                    //111
 
                     using (SqlCommand cmd = new SqlCommand(query2, conn))
                     {
