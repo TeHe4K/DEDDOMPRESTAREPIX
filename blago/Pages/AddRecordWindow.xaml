@@ -5,77 +5,70 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:blago.Pages"
         mc:Ignorable="d"
-        Title="Добавление записи" 
-        Height="600" 
+        Title="Добавление записи"
+        Height="600"
         Width="800"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize" Background="{DynamicResource BgDark}">
 
-    <Grid Margin="10">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Информация о таблице -->
-        <Border Grid.Row="0" 
-                BorderBrush="LightBlue" 
-                BorderThickness="1" 
-                CornerRadius="5" 
-                Padding="10"
-                Background="#F0F8FF">
+        <Border Grid.Row="0"
+                Style="{StaticResource CardStyle}"
+                Padding="15">
+
             <StackPanel>
-                <TextBlock Text="Добавление записи в таблицу:" 
-                           FontSize="16" 
-                           FontWeight="Bold"/>
-                <TextBlock x:Name="TableNameText" 
-                           Text="TableName" 
-                           FontSize="14" 
-                           Foreground="Blue"
-                           FontWeight="Bold"
-                           Margin="0,5,0,0"/>
-                <TextBlock x:Name="ColumnsCountText" 
-                           Text="" 
-                           FontSize="12" 
-                           Foreground="Gray"
+                <TextBlock Text="Добавление записи"
+                           Style="{StaticResource TitleText}" />
+
+                <TextBlock x:Name="TableNameText"
+                           Text="TableName"
+                           Style="{StaticResource CaptionText}"
+                           Margin="0,5,0,0" />
+
+                <TextBlock x:Name="ColumnsCountText"
+                           Text=""
+                           Style="{StaticResource CaptionText}"
                            Margin="0,2,0,0"/>
             </StackPanel>
         </Border>
 
-        <!-- Форма для ввода данных -->
-        <Border Grid.Row="1" 
-                BorderBrush="LightGray" 
-                BorderThickness="1" 
-                CornerRadius="3"
-                Margin="0,10,0,0"
-                Padding="10">
+        <Border Grid.Row="1"
+                Style="{StaticResource CardStyle}"
+                Margin="0,15,0,0"
+                Padding="15">
+
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel x:Name="FieldsPanel">
-                    <!-- Поля будут добавляться динамически -->
-                </StackPanel>
+                <StackPanel x:Name="FieldsPanel" />
             </ScrollViewer>
         </Border>
 
-        <!-- Кнопки действий -->
-        <StackPanel Grid.Row="2" 
-                    Orientation="Horizontal" 
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Margin="0,15,0,0">
-            <Button Content="Добавить" 
-                    Click="AddButton_Click" 
-                    Width="100"
-                    Background="LightGreen"
-                    FontWeight="Bold"/>
-            <Button Content="Очистить" 
-                    Click="ClearButton_Click" 
-                    Width="80"
-                    Background="LightYellow"
-                    Margin="10,0,10,0"/>
-            <Button Content="Отмена" 
-                    Click="CancelButton_Click" 
-                    Width="80"
-                    Background="LightGray"/>
+                    Margin="0,20,0,0">
+
+            <Button Content="Добавить"
+                    Style="{StaticResource PrimaryButton}"
+                    Width="120"
+                    Click="AddButton_Click"/>
+
+            <Button Content="Очистить"
+                    Style="{StaticResource SecondaryButton}"
+                    Width="120"
+                    Click="ClearButton_Click"/>
+
+            <Button Content="Отмена"
+                    Style="{StaticResource DeleteButton}"
+                    Width="120"
+                    Click="CancelButton_Click"/>
         </StackPanel>
+
     </Grid>
 </Window>
