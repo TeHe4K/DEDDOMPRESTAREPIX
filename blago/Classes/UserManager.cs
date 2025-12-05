@@ -600,7 +600,6 @@ namespace blago.Classes
             }
         }
 
-        // Назначение ролей пользователю
         public static bool GrantDatabaseRole(string userName, string roleName)
         {
             try
