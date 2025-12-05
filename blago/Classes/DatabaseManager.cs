@@ -136,32 +136,7 @@ namespace blago.Classes
         /// <summary>
         /// Авторизация с проверкой прав администратора через системные таблицы SQL Server
         /// </summary>
-        public static bool Login(string username, string password)
-        {
-            try
-            {
-                string connectionString = BuildConnectionString(username, password);
 
-                using (SqlConnection conn = new SqlConnection(connectionString))
-                {
-                    conn.Open();
-
-                    // Проверяем, является ли пользователь администратором
-                    isAdmin = CheckIfAdminInSQLServer(conn, username);
-
-                    // Сохраняем учетные данные
-                    currentUsername = username;
-                    currentPassword = password;
-                    currentConnection = new SqlConnection(connectionString);
-
-                    return true;
-                }
-            }
-            catch
-            {
-                return false;
-            }
-        }
 
         /// <summary>
         /// Проверяет, является ли пользователь администратором через системные роли SQL Server
@@ -229,6 +204,198 @@ namespace blago.Classes
         public static bool IsAdmin()
         {
             return isAdmin;
+        }
+        // ДОБАВИТЬ В КЛАСС DatabaseManager:
+
+        private static Dictionary<string, bool> _userAdminCache = new Dictionary<string, bool>();
+
+        /// <summary>
+        /// Проверяет, является ли пользователь администратором через таблицу UserAdmins
+        /// </summary>
+        public static bool CheckUserIsAdmin(string username)
+        {
+            try
+            {
+                // Проверяем кэш
+                if (_userAdminCache.ContainsKey(username))
+                    return _userAdminCache[username];
+
+                using (SqlConnection conn = CreateNewConnection())
+                {
+                    conn.Open();
+
+                    // Проверяем в таблице UserAdmins
+                    string query = @"
+                SELECT COUNT(*) 
+                FROM UserAdmins 
+                WHERE Username = @username AND IsAdmin = 1";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@username", username);
+                        int count = Convert.ToInt32(cmd.ExecuteScalar());
+                        bool isAdmin = count > 0;
+
+                        // Сохраняем в кэш
+                        _userAdminCache[username] = isAdmin;
+
+                        return isAdmin;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Если таблицы нет или ошибка, проверяем системные роли
+                return CheckSystemAdminRights(username);
+            }
+        }
+
+        /// <summary>
+        /// Проверяет системные роли пользователя
+        /// </summary>
+        private static bool CheckSystemAdminRights(string username)
+        {
+            try
+            {
+                using (SqlConnection conn = CreateNewConnection())
+                {
+                    conn.Open();
+
+                    // Проверяем роли базы данных
+                    string query = @"
+                SELECT 
+                    CASE 
+                        WHEN EXISTS (
+                            SELECT 1 
+                            FROM sys.database_role_members rm
+                            JOIN sys.database_principals r ON rm.role_principal_id = r.principal_id
+                            JOIN sys.database_principals u ON rm.member_principal_id = u.principal_id
+                            WHERE u.name = @username 
+                            AND r.name IN ('db_owner', 'db_securityadmin', 'db_accessadmin')
+                        ) THEN 1
+                        ELSE 0
+                    END";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@username", username);
+                        object result = cmd.ExecuteScalar();
+                        return result != null && Convert.ToInt32(result) == 1;
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Обновляет кэш администраторов
+        /// </summary>
+        public static void ClearAdminCache()
+        {
+            _userAdminCache.Clear();
+        }
+
+        /// <summary>
+        /// Устанавливает пользователя как администратора
+        /// </summary>
+        public static void SetUserAsAdmin(string username, bool isAdmin)
+        {
+            if (_userAdminCache.ContainsKey(username))
+                _userAdminCache[username] = isAdmin;
+            else
+                _userAdminCache.Add(username, isAdmin);
+        }
+
+        // В метод Login ДОБАВИТЬ после успешной авторизации:
+        // В классе DatabaseManager ВОЗВРАЩАЕМ старую версию Login
+        public static bool Login(string username, string password)
+        {
+            try
+            {
+                string connectionString = BuildConnectionString(username, password);
+
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    conn.Open();
+
+                    // Проверяем, является ли пользователь администратором
+                    // Старый проверенный способ
+                    isAdmin = CheckIfAdminInSQLServer(conn, username);
+
+                    // Сохраняем учетные данные
+                    currentUsername = username;
+                    currentPassword = password;
+                    currentConnection = new SqlConnection(connectionString);
+
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Добавляем ЭТОТ метод (работает от текущего подключения)
+        public static bool IsUserAdminInDatabase(string username)
+        {
+            try
+            {
+                using (SqlConnection conn = CreateNewConnection())
+                {
+                    conn.Open();
+
+                    // Способ 1: Проверяем таблицу UserAdmins
+                    try
+                    {
+                        string query = @"
+                    SELECT COUNT(*) 
+                    FROM UserAdmins 
+                    WHERE Username = @username AND IsAdmin = 1";
+
+                        using (SqlCommand cmd = new SqlCommand(query, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@username", username);
+                            int count = Convert.ToInt32(cmd.ExecuteScalar());
+                            if (count > 0) return true;
+                        }
+                    }
+                    catch
+                    {
+                        // Таблицы может не существовать
+                    }
+
+                    // Способ 2: Проверяем системные роли от имени текущего пользователя
+                    string query2 = @"
+                SELECT 
+                    CASE 
+                        WHEN EXISTS (
+                            SELECT 1 
+                            FROM sys.database_role_members rm
+                            JOIN sys.database_principals r ON rm.role_principal_id = r.principal_id
+                            JOIN sys.database_principals u ON rm.member_principal_id = u.principal_id
+                            WHERE u.name = @username 
+                            AND r.name IN ('db_owner', 'db_securityadmin', 'db_accessadmin')
+                        ) THEN 1
+                        ELSE 0
+                    END";
+                    //111
+
+                    using (SqlCommand cmd = new SqlCommand(query2, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@username", username);
+                        object result = cmd.ExecuteScalar();
+                        return result != null && Convert.ToInt32(result) == 1;
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
