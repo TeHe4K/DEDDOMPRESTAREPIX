@@ -21,6 +21,7 @@ namespace blago.Pages
   
     public partial class AdminPage : Page
     {
+        private string _currentTableName;
         public AdminPage()
         {
             InitializeComponent();
@@ -50,29 +51,15 @@ namespace blago.Pages
 
                 TableList.Items.Clear();
 
-                // Фильтруем системные таблицы (начинающиеся с "sys" и "MS")
                 string query = @"
             SELECT TABLE_NAME 
             FROM INFORMATION_SCHEMA.TABLES 
             WHERE TABLE_TYPE = 'BASE TABLE'
-            AND TABLE_NAME NOT LIKE 'sys%'  -- Исключаем системные таблицы
-            AND TABLE_NAME NOT LIKE 'MS%'   -- Исключаем таблицы MS
-            AND TABLE_SCHEMA != 'sys'       -- Исключаем схему sys
-            AND TABLE_SCHEMA != 'INFORMATION_SCHEMA' -- Исключаем информационную схему
+            AND TABLE_NAME NOT LIKE 'sys%'
+            AND TABLE_NAME NOT LIKE 'MS%'
+            AND TABLE_SCHEMA != 'sys'
+            AND TABLE_SCHEMA != 'INFORMATION_SCHEMA'
             ORDER BY TABLE_NAME";
-
-                // Альтернативный запрос с более полным фильтром:
-                string queryAlternative = @"
-            SELECT 
-                t.name AS TABLE_NAME,
-                s.name AS SCHEMA_NAME
-            FROM sys.tables t
-            JOIN sys.schemas s ON t.schema_id = s.schema_id
-            WHERE t.is_ms_shipped = 0  -- Исключаем системные объекты
-            AND t.name NOT LIKE 'sys%'
-            AND t.name NOT LIKE 'MS%'
-            AND s.name NOT IN ('sys', 'INFORMATION_SCHEMA')
-            ORDER BY s.name, t.name";
 
                 using (SqlConnection conn = DatabaseManager.CreateNewConnection())
                 {
@@ -103,6 +90,8 @@ namespace blago.Pages
         {
             try
             {
+                _currentTableName = tableName; // Сохраняем имя текущей таблицы
+
                 string query = $"SELECT TOP 1000 * FROM [{tableName}]";
 
                 using (SqlConnection conn = DatabaseManager.CreateNewConnection())
@@ -124,6 +113,8 @@ namespace blago.Pages
                         TableView.CanUserAddRows = false;
                         TableView.CanUserDeleteRows = false;
                         TableView.IsReadOnly = true;
+                        TableView.SelectionMode = DataGridSelectionMode.Single; // Важно!
+                        TableView.SelectionUnit = DataGridSelectionUnit.FullRow; // Важно!
                     }
                 }
             }
@@ -136,17 +127,262 @@ namespace blago.Pages
 
         private void AddNote(object sender, RoutedEventArgs e)
         {
+            AddRecordToTable(sender, e);
+        }
+        private void AddRecordToTable(object sender, RoutedEventArgs e)
+        {
+            // Проверяем, выбрана ли таблица
+            if (TableList.SelectedItem == null)
+            {
+                MessageBox.Show("Пожалуйста, выберите таблицу для добавления записи",
+                    "Таблица не выбрана",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
+            string selectedTable = TableList.SelectedItem.ToString();
+
+            try
+            {
+                // Открываем окно добавления записи
+                var addRecordWindow = new AddRecordWindow(selectedTable);
+                bool? result = addRecordWindow.ShowDialog();
+
+                if (result == true)
+                {
+                    // Обновляем данные в таблице
+                    LoadTableData(selectedTable);
+
+                    // Показываем сообщение об успехе
+                    MessageBox.Show("Запись успешно добавлена",
+                        "Успех",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при добавлении записи: {ex.Message}",
+                    "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void DeleteNote(object sender, RoutedEventArgs e)
         {
+            if (string.IsNullOrEmpty(_currentTableName))
+            {
+                MessageBox.Show("Пожалуйста, выберите таблицу",
+                    "Таблица не выбрана",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
+            // Проверяем, выбрана ли запись в DataGrid
+            if (TableView.SelectedItem == null)
+            {
+                MessageBox.Show("Пожалуйста, выберите запись для удаления",
+                    "Запись не выбрана",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                // Получаем выбранную строку
+                DataRowView selectedRow = (DataRowView)TableView.SelectedItem;
+                DataRow row = selectedRow.Row;
+
+                // Получаем первичный ключ таблицы
+                var primaryKeys = GetPrimaryKeyColumns(_currentTableName);
+
+                // Формируем WHERE условие для удаления
+                string whereCondition = "";
+
+                if (primaryKeys.Count > 0)
+                {
+                    // Используем первичный ключ
+                    StringBuilder whereBuilder = new StringBuilder();
+
+                    foreach (string columnName in primaryKeys)
+                    {
+                        if (whereBuilder.Length > 0)
+                            whereBuilder.Append(" AND ");
+
+                        object value = row[columnName];
+                        string formattedValue = FormatValueForSql(value);
+
+                        whereBuilder.Append($"[{columnName}] = {formattedValue}");
+                    }
+
+                    whereCondition = whereBuilder.ToString();
+                }
+                else
+                {
+                    // Если нет первичного ключа, используем все столбцы
+                    MessageBox.Show("В таблице не найден первичный ключ. Удаление может быть неточным.",
+                        "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                    StringBuilder whereBuilder = new StringBuilder();
+
+                    foreach (DataColumn column in row.Table.Columns)
+                    {
+                        if (whereBuilder.Length > 0)
+                            whereBuilder.Append(" AND ");
+
+                        object value = row[column.ColumnName];
+
+                        if (value == DBNull.Value || value == null)
+                        {
+                            whereBuilder.Append($"[{column.ColumnName}] IS NULL");
+                        }
+                        else
+                        {
+                            string formattedValue = FormatValueForSql(value);
+                            whereBuilder.Append($"[{column.ColumnName}] = {formattedValue}");
+                        }
+                    }
+
+                    whereCondition = whereBuilder.ToString();
+                }
+
+                // Показываем подтверждение
+                MessageBoxResult result = MessageBox.Show(
+                    $"Вы уверены, что хотите удалить выбранную запись из таблицы '{_currentTableName}'?",
+                    "Подтверждение удаления",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (result != MessageBoxResult.Yes)
+                    return;
+
+                // Выполняем удаление
+                string deleteQuery = $"DELETE FROM [{_currentTableName}] WHERE {whereCondition}";
+
+                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand(deleteQuery, conn))
+                    {
+                        int rowsAffected = cmd.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            MessageBox.Show("Запись успешно удалена",
+                                "Успех",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
+
+                            // Обновляем данные в таблице
+                            LoadTableData(_currentTableName);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Не удалось удалить запись",
+                                "Ошибка",
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                if (sqlEx.Number == 547) // Ошибка внешнего ключа
+                {
+                    MessageBox.Show("Невозможно удалить запись. Существуют связанные записи в других таблицах.",
+                        "Ошибка удаления", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                else
+                {
+                    MessageBox.Show($"Ошибка SQL при удалении: {sqlEx.Message}",
+                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при удалении записи: {ex.Message}",
+                    "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
+
 
         private void EditNote(object sender, RoutedEventArgs e)
         {
+            // Проверяем, выбрана ли таблица
+            if (string.IsNullOrEmpty(_currentTableName))
+            {
+                MessageBox.Show("Пожалуйста, выберите таблицу",
+                    "Таблица не выбрана",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
+            // Проверяем, выбрана ли запись в DataGrid
+            if (TableView.SelectedItem == null)
+            {
+                MessageBox.Show("Пожалуйста, выберите запись для редактирования",
+                    "Запись не выбрана",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                // Пробуем получить выбранную строку
+                DataRow row = null;
+                DataRowView rowView = null;
+
+                // Способ 1: Пробуем как DataRowView
+                rowView = TableView.SelectedItem as DataRowView;
+                if (rowView != null)
+                {
+                    row = rowView.Row;
+                }
+                else
+                {
+                    // Способ 2: Пробуем получить через ItemsSource
+                    if (TableView.ItemsSource is DataView dataView)
+                    {
+                        int selectedIndex = TableView.SelectedIndex;
+                        if (selectedIndex >= 0 && selectedIndex < dataView.Count)
+                        {
+                            rowView = dataView[selectedIndex];
+                            row = rowView.Row;
+                        }
+                    }
+                }
+
+                if (row == null)
+                {
+                    MessageBox.Show("Не удалось получить выбранную запись",
+                        "Ошибка",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                DataTable tempTable = row.Table.Clone();
+                DataRow rowCopy = tempTable.NewRow();
+                rowCopy.ItemArray = row.ItemArray;
+
+                // Открываем окно редактирования записи
+                var editRecordWindow = new EditRecordWindow(_currentTableName, rowCopy);
+                bool? result = editRecordWindow.ShowDialog();
+
+                if (result == true)
+                {
+                    // Обновляем данные в таблице
+                    LoadTableData(_currentTableName);
+
+                    MessageBox.Show("Запись успешно обновлена",
+                        "Успех",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при редактировании записи: {ex.Message}",
+                    "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void CreateUser(object sender, RoutedEventArgs e)
@@ -358,6 +594,73 @@ namespace blago.Pages
                 MessageBox.Show($"Ошибка при редактировании таблицы: {ex.Message}",
                     "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private List<string> GetPrimaryKeyColumns(string tableName)
+        {
+            List<string> primaryKeys = new List<string>();
+
+            try
+            {
+                string query = @"
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            WHERE OBJECTPROPERTY(OBJECT_ID(CONSTRAINT_SCHEMA + '.' + CONSTRAINT_NAME), 'IsPrimaryKey') = 1
+            AND TABLE_NAME = @tableName
+            ORDER BY ORDINAL_POSITION";
+
+                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@tableName", tableName);
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                primaryKeys.Add(reader["COLUMN_NAME"].ToString());
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // В случае ошибки возвращаем пустой список
+            }
+
+            return primaryKeys;
+        }
+        private string FormatValueForSql(object value)
+        {
+            if (value == DBNull.Value || value == null)
+                return "NULL";
+
+            Type valueType = value.GetType();
+
+            if (valueType == typeof(string) || valueType == typeof(DateTime) || valueType == typeof(Guid))
+            {
+                // Экранируем одинарные кавычки
+                string stringValue = value.ToString().Replace("'", "''");
+                return $"N'{stringValue}'";
+            }
+            else if (valueType == typeof(bool))
+            {
+                return Convert.ToBoolean(value) ? "1" : "0";
+            }
+            else if (valueType == typeof(int) || valueType == typeof(long) ||
+                     valueType == typeof(decimal) || valueType == typeof(double) ||
+                     valueType == typeof(float))
+            {
+                return value.ToString();
+            }
+            else
+            {
+                // Для других типов
+                string stringValue = value.ToString().Replace("'", "''");
+                return $"N'{stringValue}'";
             }
         }
     }
