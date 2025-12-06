@@ -6,11 +6,38 @@
         xmlns:local="clr-namespace:blago.Pages"
         mc:Ignorable="d"
         Title="Создание нового пользователя" 
-        Height="450" 
+        Height="655" 
         Width="500"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize" SizeToContent="WidthAndHeight">
+        ResizeMode="NoResize" SizeToContent="WidthAndHeight"
+        Background="{DynamicResource BgDark}">
+    <Window.Resources>
+        <Style TargetType="ListBox">
+            <Setter Property="Background" Value="{StaticResource CardBg}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="Background" Value="#112A2A"/>
+            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Teal}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
 
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1F4444"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -23,16 +50,18 @@
                    Text="Создание пользователя SQL Server" 
                    FontSize="16" 
                    FontWeight="Bold"
-                   Margin="0,0,0,20"/>
+                   Margin="0,0,0,20"
+                   Style="{DynamicResource TitleText}"/>
 
         <!-- Форма -->
         <StackPanel Grid.Row="1">
             <StackPanel Margin="0,0,0,15">
-                <TextBlock Text="Логин SQL Server:" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBlock Text="Логин SQL Server:" Style="{StaticResource CaptionText}" FontWeight="Bold" Margin="0,0,0,5"/>
                 <TextBox x:Name="UsernameTextBox" 
                          Height="25" 
                          Padding="3"
-                         TextChanged="UsernameTextBox_TextChanged"/>
+                         TextChanged="UsernameTextBox_TextChanged"
+                         Style="{DynamicResource InputBoxStyle}"/>
                 <TextBlock x:Name="UsernameHint" 
                            Text="Это имя будет использоваться для входа в SQL Server" 
                            FontSize="10" 
@@ -41,62 +70,68 @@
             </StackPanel>
 
             <StackPanel Margin="0,0,0,15">
-                <TextBlock Text="ФИО:" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBlock Text="ФИО:" Style="{StaticResource CaptionText}" FontWeight="Bold" Margin="0,0,0,5"/>
                 <TextBox x:Name="FullNameTextBox" 
                          Height="25" 
-                         Padding="3"/>
+                         Padding="3"
+                         Style="{DynamicResource InputBoxStyle}"/>
             </StackPanel>
 
             <StackPanel Margin="0,0,0,15">
-                <TextBlock Text="Пароль SQL Server:" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBlock Text="Пароль SQL Server:" Style="{StaticResource CaptionText}" FontWeight="Bold" Margin="0,0,0,5"/>
                 <PasswordBox x:Name="PasswordBox" 
                              Height="25" 
                              Padding="3"
-                             PasswordChanged="PasswordBox_PasswordChanged"/>
+                             PasswordChanged="PasswordBox_PasswordChanged"
+                             Style="{DynamicResource PasswordBoxStyle}"/>
                 <TextBlock x:Name="PasswordRequirements" 
                            Text="Пароль должен содержать не менее 8 символов, включая заглавные, строчные буквы, цифры и специальные символы" 
                            FontSize="10" 
                            Foreground="Gray"
                            Margin="0,2,0,0"
-                           TextWrapping="Wrap"/>
+                           TextWrapping="Wrap" 
+                           Style="{StaticResource CaptionText}"/>
                 <TextBlock x:Name="PasswordStrength" 
                            Text="" 
                            FontSize="10" 
                            FontWeight="Bold"
-                           Margin="0,2,0,0"/>
+                           Margin="0,2,0,0"
+                           Style="{DynamicResource CaptionText}"/>
             </StackPanel>
 
-            <StackPanel Margin="0,0,0,15">
-                <TextBlock Text="Подтверждение пароля:" FontWeight="Bold" Margin="0,0,0,5"/>
+            <StackPanel Margin="0,0,0,">
+                <TextBlock Text="Подтверждение пароля:" Style="{StaticResource CaptionText}" FontWeight="Bold" Margin="0,0,0,5"/>
                 <PasswordBox x:Name="ConfirmPasswordBox" 
                              Height="25" 
                              Padding="3"
-                             PasswordChanged="ConfirmPasswordBox_PasswordChanged"/>
+                             PasswordChanged="ConfirmPasswordBox_PasswordChanged"
+                             Style="{DynamicResource PasswordBoxStyle}"/>
                 <TextBlock x:Name="PasswordMatch" 
                            Text="" 
                            FontSize="10" 
                            FontWeight="Bold"
-                           Margin="0,2,0,0"/>
+                           Margin="0,2,0,0"
+                           Style="{StaticResource CaptionText}"/>
             </StackPanel>
 
-            <StackPanel Margin="0,0,0,15">
+            <StackPanel Margin="0,0,0,5">
                 <CheckBox x:Name="GeneratePasswordCheckBox" 
                           Content="Сгенерировать безопасный пароль"
                           IsChecked="True"
                           Checked="GeneratePasswordCheckBox_Checked"
-                          Unchecked="GeneratePasswordCheckBox_Unchecked"/>
+                          Unchecked="GeneratePasswordCheckBox_Unchecked" Foreground="#FFB4C8C8"
+                          />
                 <TextBlock x:Name="GeneratedPasswordText" 
                             Text="" 
                             FontSize="10" 
                             FontWeight="Bold"
-                             Foreground="Green"
-           Margin="20,5,0,0"/>
+                             Foreground="Green"/>
             </StackPanel>
 
-            <StackPanel Margin="0,0,0,15">
-                <TextBlock Text="Роли базы данных:" FontWeight="Bold" Margin="0,0,0,5"/>
+            <StackPanel Margin="0,0,0,15" Height="113">
+                <TextBlock Text="Роли базы данных:" Style="{StaticResource CaptionText}" FontWeight="Bold" Margin="0,0,0,5"/>
                 <ListBox x:Name="RolesListBox" 
-                         Height="80"
+                         Height="90"
                          SelectionMode="Multiple">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -117,11 +152,13 @@
                     Width="100"
                     Background="LightGreen"
                     Margin="0,0,10,0"
-                    x:Name="CreateButton"/>
+                    x:Name="CreateButton"
+                    Style="{DynamicResource PrimaryButton}"/>
             <Button Content="Отмена" 
                     Click="CancelButton_Click" 
                     Width="80"
-                    Background="LightGray"/>
+                    Background="LightGray"
+                    Style="{DynamicResource DeleteButton}"/>
         </StackPanel>
     </Grid>
 </Window>

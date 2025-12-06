@@ -9,7 +9,8 @@
         Height="700" 
         Width="900"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        Background="{StaticResource BgDark}">
     
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -23,7 +24,7 @@
             <TextBlock Text="Управление пользователями" 
                        FontSize="18" 
                        FontWeight="Bold"
-                       Foreground="DarkBlue"/>
+                       Style="{StaticResource TitleText}"/>
         </StackPanel>
 
         <!-- Основной контент -->
@@ -48,12 +49,14 @@
                         <Button Content="➕ Новый" 
                                 Click="AddUserButton_Click" 
                                 Padding="10,5"
-                                Background="LightGreen"/>
+                                Background="LightGreen"
+                                Style="{DynamicResource PrimaryButton}" Width="90"/>
                         <Button Content="🗑️ Удалить" 
                                 Click="DeleteUserButton_Click" 
                                 Padding="10,5"
                                 Background="LightCoral"
-                                Margin="5,0,0,0"/>
+                                Margin="5,0,0,0"
+                                Style="{DynamicResource SecondaryButton}" Width="90"/>
                     </StackPanel>
 
                     <DataGrid x:Name="UsersGrid" 
@@ -63,7 +66,8 @@
                               CanUserDeleteRows="False"
                               SelectionMode="Single"
                               SelectionChanged="UsersGrid_SelectionChanged"
-                              Margin="5">
+                              Margin="5"
+                              Style="{DynamicResource ModernDataGrid}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Логин" Binding="{Binding Username}" Width="*"/>
                             <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="*"/>
@@ -89,7 +93,8 @@
                         <TextBlock x:Name="SelectedUserText" 
                                    Text="Выберите пользователя" 
                                    FontWeight="Bold"
-                                   FontSize="14"/>
+                                   FontSize="14"
+                                   Style="{StaticResource CaptionText}"/>
                     </StackPanel>
 
                     <DataGrid x:Name="PermissionsGrid" 
@@ -97,7 +102,8 @@
                               AutoGenerateColumns="False"
                               CanUserAddRows="False"
                               CanUserDeleteRows="False"
-                              Margin="5">
+                              Margin="5"
+                              Style="{DynamicResource ModernDataGrid}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Таблица" 
                                                 Binding="{Binding TableName}" 
@@ -124,10 +130,10 @@
                                 Margin="5">
                         <Button Content="Сохранить права" 
                                 Click="SavePermissionsButton_Click" 
-                                Width="120"
-                                Background="LightBlue"
+                                Width="140"
                                 IsEnabled="False"
-                                x:Name="SavePermissionsButton"/>
+                                x:Name="SavePermissionsButton"
+                                Style="{DynamicResource SecondaryButton}"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -141,7 +147,7 @@
             <Button Content="Закрыть" 
                     Click="CloseButton_Click" 
                     Width="80"
-                    Background="LightGray"/>
+                    Style="{DynamicResource SecondaryButton}"/>
         </StackPanel>
     </Grid>
 </Window>
