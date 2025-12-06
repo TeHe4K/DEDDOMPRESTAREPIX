@@ -89,5 +89,20 @@ namespace blago.Pages
                 Login_Click(sender, e);
             }
         }
+
+        private void ComboBoxAuth(object sender, ContextMenuEventArgs e)
+        {
+            if(Orphanage.IsSelected == true)
+            {
+                DatabaseManager.database = "childrens_orphanage";
+            }
+            else
+            {
+                if (Nursing_home.IsSelected == true)
+                {
+                    DatabaseManager.database = "elderly_care_home";
+                }
+            }
+        }
     }
 }

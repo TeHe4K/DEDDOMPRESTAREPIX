@@ -97,9 +97,13 @@
                                Margin="2,12,0,4"/>
 
                     <ComboBox Style="{StaticResource ComboBoxDark}"
-                              Height="40">
-                        <ComboBoxItem Content="Детский Дом"/>
-                        <ComboBoxItem Content="Дом престарелых"/>
+                              x:Name="DataBaseChoice"
+                              Height="40"
+                              ContextMenuOpening="ComboBoxAuth">
+                        <ComboBoxItem Content="Детский Дом" 
+                                      x:Name="Orphanage"/>
+                        <ComboBoxItem Content="Дом престарелых"
+                                      x:Name="Nursing_home"/>
                     </ComboBox>
 
                     <!-- Кнопка -->

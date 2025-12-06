@@ -11,7 +11,7 @@ namespace blago.Classes
     {
         // Настройки подключения (можно вынести в конфиг при необходимости)
         private static string sqlServerIp = "WIN-Q9DJ17TRB0K\\DOMPRESTARELIX";
-        private static string database = "childrens_orphanage";
+        public static string database = "childrens_orphanage";
 
         // Текущие учетные данные пользователя
         private static string currentUsername;
