@@ -8,7 +8,17 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="UserPage">
 
-    <Grid Background="White">
-        <TextBlock Text="User" />
+    <Grid Background="{StaticResource BgDark}">
+        <!--Data Base View-->
+        <DataGrid 
+        Margin="181,10,10,10" 
+        x:Name="TableView" 
+        Style="{DynamicResource ModernDataGrid}"/>
+        <!--Table List-->
+        <ListBox 
+        Margin="10,10,624,10" 
+        x:Name="TableList" 
+        SelectionChanged="TableList_SelectionChanged" 
+        Style="{DynamicResource BaseInput}"/>
     </Grid>
 </Page>
