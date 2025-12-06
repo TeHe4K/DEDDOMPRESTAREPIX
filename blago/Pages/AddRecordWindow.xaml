@@ -9,7 +9,7 @@
         Height="600"
         Width="800"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize" Background="{DynamicResource BgDark}">
+        ResizeMode="NoResize" Background="{DynamicResource BgDark}" WindowStyle="ToolWindow">
 
     <Grid Margin="20">
         <Grid.RowDefinitions>

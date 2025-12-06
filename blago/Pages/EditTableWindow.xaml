@@ -10,7 +10,7 @@
         Width="700"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Background="{StaticResource BgDark}" WindowStyle="None">
+        Background="{StaticResource BgDark}" WindowStyle="ToolWindow">
 
     <!-- Подключение Style.xaml -->
     <Window.Resources>

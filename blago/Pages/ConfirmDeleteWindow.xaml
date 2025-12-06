@@ -11,7 +11,7 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         SizeToContent="WidthAndHeight"
-        Background="{StaticResource CardBg}" WindowStyle="None">
+        Background="{StaticResource CardBg}" WindowStyle="ToolWindow">
 
     <Grid Margin="15">
         <Grid.RowDefinitions>

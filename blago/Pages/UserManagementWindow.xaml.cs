@@ -14,9 +14,6 @@ using System.Windows.Shapes;
 
 namespace blago.Pages
 {
-    /// <summary>
-    /// Логика взаимодействия для UserManagementWindow.xaml
-    /// </summary>
     public partial class UserManagementWindow : Window
     {
         private Classes.UserManager.User _selectedUser;
@@ -45,10 +42,6 @@ namespace blago.Pages
         private void UsersGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _selectedUser = UsersGrid.SelectedItem as Classes.UserManager.User;
-         
-
-            
-
             if (_selectedUser != null)
             {
                 SelectedUserText.Text = $"Права доступа для: {_selectedUser.FullName} ({_selectedUser.Username})";
@@ -65,7 +58,6 @@ namespace blago.Pages
 
         private void LoadUserPermissions()
         {
-
             try
             {
                 _currentPermissions = Classes.UserManager.GetAllTablePermissions(_selectedUser.UserId);

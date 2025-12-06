@@ -10,7 +10,7 @@
         Width="600"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Background="{StaticResource BgDark}" WindowStyle="None">
+        Background="{StaticResource BgDark}" WindowStyle="ToolWindow">
 
     <Grid Margin="12">
         <Grid.RowDefinitions>
@@ -81,7 +81,7 @@
                     CornerRadius="6"
                     Background="{StaticResource CardBg}"
                     Padding="6"
-                    Height="250">
+                    Height="173">
                 <DataGrid x:Name="dgColumns"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
@@ -91,7 +91,7 @@
                           CanUserSortColumns="True"
                           Style="{StaticResource ModernDataGrid}"
                           HeadersVisibility="Column"
-                          RowHeaderWidth="0" Margin="0,0,0,80">
+                          RowHeaderWidth="0" Margin="0,0,0,-7">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Имя столбца"
                                             Binding="{Binding ColumnName}"
