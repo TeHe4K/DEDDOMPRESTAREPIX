@@ -1,137 +1,122 @@
 ﻿<Page x:Class="blago.Pages.Auth"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:blago.Pages"
-      mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
-      Title="Auth" KeyDown="Enter"  Background="{StaticResource BgDark}">
+      mc:Ignorable="d"
+      Title="Auth"
+      Background="{StaticResource BgDark}"
+      KeyDown="Enter">
 
-    <Page.Resources>
-        <Style TargetType="DataGrid">
-            <Setter Property="Background" Value="{StaticResource CardBg}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-            <Setter Property="RowBackground" Value="#112A2A"/>
-            <Setter Property="AlternatingRowBackground" Value="#183535"/>
-            <Setter Property="BorderBrush" Value="{StaticResource Teal}"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="GridLinesVisibility" Value="None"/>
-        </Style>
-
-        <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#193939"/>
-            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="BorderBrush" Value="#233F3F"/>
-            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="Padding" Value="8"/>
-        </Style>
-        <Style TargetType="ListBox">
-            <Setter Property="Background" Value="{StaticResource CardBg}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="Padding" Value="5"/>
-        </Style>
-
-        <Style TargetType="ListBoxItem">
-            <Setter Property="Padding" Value="8"/>
-            <Setter Property="Margin" Value="3"/>
-            <Setter Property="Background" Value="#112A2A"/>
-            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="{StaticResource Teal}"/>
-                    <Setter Property="Foreground" Value="White"/>
-                </Trigger>
-
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#1F4444"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="IconButton" TargetType="Button">
-            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="22"/>
-
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="Transparent">
-                            <ContentPresenter VerticalAlignment="Center"
-                                          HorizontalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource Mint}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-    </Page.Resources>
-
-    <Grid Background="{DynamicResource BgDark}" Margin="24">
+    <Grid Margin="24">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="75*"/>
-            <ColumnDefinition Width="113*"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1.3*"/>
         </Grid.ColumnDefinitions>
-        <Grid Grid.Column="0" Margin="12,12,12,12">
-            <Border Background="{DynamicResource CardBg}" CornerRadius="12" Padding="18">
-                <Grid Background="{DynamicResource CardBg}" VerticalAlignment="Top" Height="336" Margin="0,10,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="260" >
-                        <Grid Height="120" Width="120" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Image Source="/Image/LogoNew.png" Margin="-25,-40,-25,-2"/>
-                            <TextBlock FontFamily="{StaticResource UiFont}" 
-                                       FontWeight="Bold" Foreground="White"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18"/>
-                        </Grid>
-                        <TextBlock Text="Панель управления базами данных" TextAlignment="Center"
-                                       Margin="0,18,0,0" Style="{StaticResource CaptionText}" Foreground="White" Opacity="0.95" FontSize="14"/>
-                        <TextBlock Text="Предупреждение!" TextAlignment="Center"
-                                Margin="0,18,0,0" Style="{StaticResource CaptionText}" Foreground="#FFDF5757" Opacity="0.95" FontSize="14" FontWeight="Bold"/>
-                        <TextBlock Text="Д4нн0е пр0гр4ммн0е 06еспечение с0здан0  8  &#x0a; р43влек4тельнb|х целяX и не несет ник4к0й &#x0a;смысл0в0Z~ н4Lру3ки!;" TextAlignment="Center"
-                             Margin="0,18,0,0" Style="{StaticResource CaptionText}" Foreground="#FFDF5757" Opacity="0.95" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Grid>
+
+        <!-- ====== ЛЕВАЯ ПАНЕЛЬ ====== -->
+        <Border Grid.Column="0"
+                Background="{StaticResource CardBg}"
+                CornerRadius="12"
+                Padding="18"
+                Margin="12">
+
+            <Grid VerticalAlignment="Center">
+                <StackPanel Width="260" HorizontalAlignment="Center">
+
+                    <!-- ЛОГО -->
+                    <Grid Width="120" Height="120" HorizontalAlignment="Center">
+                        <Image Source="/Image/LogoNew.png"
+                               Width="120" Height="120"
+                               Stretch="Uniform"
+                               Margin="-25,-40,-25,-2"/>
+                    </Grid>
+
+                    <TextBlock Text="Панель управления базами данных"
+                               Style="{StaticResource CaptionText}"
+                               Margin="0,18,0,0"
+                               TextAlignment="Center"/>
+
+                    <TextBlock Text="Предупреждение!"
+                               Style="{StaticResource CaptionText}"
+                               Foreground="#FFDF5757"
+                               Margin="0,18,0,0"
+                               FontWeight="Bold"
+                               TextAlignment="Center"/>
+
+                    <TextBlock Text="Д4нн0е пр0гр4ммн0е 06еспечение с0здан0 8 &#x0a;
+                               р43влек4тельнb|х целяX и не несет ник4к0й &#x0a;
+                               смысл0в0Z~ н4Lру3ки!;"
+                               Style="{StaticResource CaptionText}"
+                               Foreground="#FFDF5757"
+                               Margin="0,18,0,0"
+                               FontSize="10"
+                               TextAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+
+        <!-- ====== ПРАВАЯ ПАНЕЛЬ ====== -->
+        <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+            <Border Style="{StaticResource CardStyle}"
+                    Background="{StaticResource InputBg}"
+                    Width="380" Padding="25">
+
+                <StackPanel>
+
+                    <TextBlock Text="Авторизация"
+                               Style="{StaticResource TitleText}"
+                               Margin="0,0,0,12"/>
+
+                    <!-- Логин -->
+                    <TextBlock Text="Логин"
+                               Style="{StaticResource CaptionText}"
+                               Margin="2,6,0,4"/>
+
+                    <TextBox x:Name="txtUser"
+                             Style="{StaticResource InputBoxStyle}"
+                             ToolTip="Введите логин"
+                             AutomationProperties.Name="Логин"/>
+
+                    <!-- Пароль -->
+                    <TextBlock Text="Пароль"
+                               Style="{StaticResource CaptionText}"
+                               Margin="2,12,0,4"/>
+
+                    <PasswordBox x:Name="txtPass"
+                                 Style="{StaticResource PasswordBoxStyle}"
+                                 ToolTip="Введите пароль"
+                                 AutomationProperties.Name="Пароль"/>
+
+                    <!-- База данных -->
+                    <TextBlock Text="База данных"
+                               Style="{StaticResource CaptionText}"
+                               Margin="2,12,0,4"/>
+
+                    <ComboBox Style="{StaticResource ComboBoxDark}"
+                              Height="40">
+                        <ComboBoxItem Content="Детский Дом"/>
+                        <ComboBoxItem Content="Дом престарелых"/>
+                    </ComboBox>
+
+                    <!-- Кнопка -->
+                    <Button x:Name="LoginButton"
+                            Content="Войти"
+                            Style="{StaticResource PrimaryButton}"
+                            Margin="0,18,0,8"
+                            Height="44"
+                            Click="Login_Click"/>
+
+                    <TextBlock Text="Вход только для сотрудников компании"
+                               Style="{StaticResource CaptionText}"
+                               HorizontalAlignment="Center"
+                               Margin="0,8,0,0"/>
+                </StackPanel>
             </Border>
         </Grid>
-        <Grid Grid.Column="1" Margin="12,12,12,12">
-            <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="380">
-                <Border Style="{StaticResource CardStyle}" Background="{DynamicResource InputBg}">
-                    <StackPanel>
-                        <TextBlock Text="Авторизация" Style="{StaticResource TitleText}" Margin="0,0,0,12"/>
-                        <TextBlock Text="Логин" Margin="2,6,0,4" Style="{StaticResource CaptionText}"/>
-                        <TextBox x:Name="txtUser" Style="{StaticResource InputBoxStyle}"
-                                 ToolTip="Введите логин" AutomationProperties.Name="Логин"/>
-                        <TextBlock Text="Пароль" Margin="2,12,0,4" Style="{StaticResource CaptionText}"/>
-                        <PasswordBox x:Name="txtPass" Style="{StaticResource PasswordBoxStyle}"
-                                     ToolTip="Введите пароль" AutomationProperties.Name="Пароль"/>
-                        <Grid Margin="0,10,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                        </Grid>
-                        <Button x:Name="LoginButton" Content="Войти" Style="{StaticResource PrimaryButton}"
-                                Margin="0,18,0,8" Height="44" Click="Login_Click" Background="{DynamicResource Teal}"/>
-                        <TextBlock Text="Вход только для сотрудников компании" Style="{StaticResource CaptionText}"
-                                   HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-        </Grid>
+
     </Grid>
 </Page>
