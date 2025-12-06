@@ -49,7 +49,7 @@
                         <Button Content="➕ Новый" 
                                 Click="AddUserButton_Click" 
                                 Padding="10,5"
-                                Background="#FF79CE79"
+                                Background="#FF2C7A78"
                                 Style="{DynamicResource PrimaryButton}" Width="90"/>
                         <Button Content="🗑️ Удалить" 
                                 Click="DeleteUserButton_Click" 

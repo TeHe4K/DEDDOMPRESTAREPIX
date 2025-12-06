@@ -99,7 +99,7 @@
                            Style="{DynamicResource CaptionText}"/>
             </StackPanel>
 
-            <StackPanel Margin="0,0,0,">
+            <StackPanel Margin="0,0,0,0">
                 <TextBlock Text="Подтверждение пароля:" Style="{StaticResource CaptionText}" FontWeight="Bold" Margin="0,0,0,5"/>
                 <PasswordBox x:Name="ConfirmPasswordBox" 
                              Height="25" 
@@ -150,14 +150,12 @@
             <Button Content="Создать" 
                     Click="CreateButton_Click" 
                     Width="100"
-                    Background="LightGreen"
                     Margin="0,0,10,0"
                     x:Name="CreateButton"
                     Style="{DynamicResource PrimaryButton}"/>
             <Button Content="Отмена" 
                     Click="CancelButton_Click" 
                     Width="80"
-                    Background="LightGray"
                     Style="{DynamicResource DeleteButton}"/>
         </StackPanel>
     </Grid>
