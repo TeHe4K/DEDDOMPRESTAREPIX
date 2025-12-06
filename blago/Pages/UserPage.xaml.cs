@@ -107,7 +107,6 @@ namespace blago.Pages
             if (_currentPermission == null || !_currentPermission.CanAdd)
                 return;
 
-            // Проверяем, выбрана ли таблица
             if (TableList.SelectedItem == null)
             {
                 MessageBox.Show("Пожалуйста, выберите таблицу для добавления записи",
@@ -116,20 +115,17 @@ namespace blago.Pages
                 return;
             }
 
-            string selectedTable = TableList.SelectedItem.ToString();
+            // Правильное имя таблицы
+            string selectedTable = _currentPermission.TableName;
 
             try
             {
-                // Открываем окно добавления записи
                 var addRecordWindow = new AddRecordWindow(selectedTable);
                 bool? result = addRecordWindow.ShowDialog();
 
                 if (result == true)
                 {
-                    // Обновляем данные в таблице
                     LoadTableData(selectedTable);
-
-                    // Показываем сообщение об успехе
                     MessageBox.Show("Запись успешно добавлена",
                         "Успех",
                         MessageBoxButton.OK, MessageBoxImage.Information);
@@ -142,6 +138,7 @@ namespace blago.Pages
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
 
         private void EditNote(object sender, RoutedEventArgs e)
         {
