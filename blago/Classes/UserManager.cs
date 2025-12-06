@@ -36,6 +36,26 @@ namespace blago.Classes
         // ========== ДОБАВЛЯЮ НЕДОСТАЮЩИЕ МЕТОДЫ ==========
 
         // 1. Метод GetAllTablePermissions
+        public static int GetUserIdByUsername(string username)
+{
+    using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+    {
+        conn.Open();
+        string sql = "SELECT UserId FROM db_Users WHERE Username = @u";
+
+        SqlCommand cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@u", username);
+
+        object result = cmd.ExecuteScalar();
+
+        if (result == null)
+            throw new Exception("UserId не найден для пользователя: " + username);
+
+        return Convert.ToInt32(result);
+    }
+}
+
+
         public static List<TablePermission> GetAllTablePermissions(int userId)
         {
             List<TablePermission> permissions = new List<TablePermission>();
@@ -970,5 +990,39 @@ namespace blago.Classes
                 return false;
             }
         }
+        public static void ApplyTablePermission(string username, TablePermission p)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+
+                // SELECT
+                string selectSql = p.CanView
+                    ? $"GRANT SELECT ON [{p.TableName}] TO [{username}];"
+                    : $"REVOKE SELECT ON [{p.TableName}] FROM [{username}];";
+
+                // INSERT
+                string insertSql = p.CanAdd
+                    ? $"GRANT INSERT ON [{p.TableName}] TO [{username}];"
+                    : $"REVOKE INSERT ON [{p.TableName}] FROM [{username}];";
+
+                // UPDATE
+                string updateSql = p.CanEdit
+                    ? $"GRANT UPDATE ON [{p.TableName}] TO [{username}];"
+                    : $"REVOKE UPDATE ON [{p.TableName}] FROM [{username}];";
+
+                // DELETE
+                string deleteSql = p.CanDelete
+                    ? $"GRANT DELETE ON [{p.TableName}] TO [{username}];"
+                    : $"REVOKE DELETE ON [{p.TableName}] FROM [{username}];";
+
+                using (SqlCommand cmd = new SqlCommand(
+                     selectSql + insertSql + updateSql + deleteSql, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
     }
 }

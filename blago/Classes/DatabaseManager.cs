@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
@@ -397,5 +398,21 @@ namespace blago.Classes
                 return false;
             }
         }
+        public static DataTable GetTable(string tableName)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+
+                string sql = $"SELECT * FROM [{tableName}]";
+
+                SqlDataAdapter adapter = new SqlDataAdapter(sql, conn);
+                DataTable table = new DataTable();
+                adapter.Fill(table);
+
+                return table;
+            }
+        }
+
     }
 }

@@ -63,7 +63,7 @@ namespace blago.Pages
                             DatabaseManager.IsAdmin();
                         }
                     }
-
+                    int userId = UserManager.GetUserIdByUsername(DatabaseManager.GetCurrentUsername());
                     // 4. Перенаправление
                     if (isAdmin)
                     {
@@ -72,7 +72,7 @@ namespace blago.Pages
                     }
                     else
                     {
-                        UserPage userPage = new UserPage();
+                        UserPage userPage = new UserPage(userId);
                         this.NavigationService.Navigate(userPage);
                     }
                 }

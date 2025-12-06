@@ -1,4 +1,5 @@
-﻿using System;
+﻿using blago.Classes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -131,7 +132,10 @@ namespace blago.Pages
                 bool allSaved = true;
                 foreach (var permission in _currentPermissions)
                 {
-                    bool success = Classes.UserManager.SaveUserTablePermission(_selectedUser.UserId, permission);
+                    bool success = UserManager.SaveUserTablePermission(_selectedUser.UserId, permission);
+
+                    UserManager.ApplyTablePermission(_selectedUser.Username, permission);
+
                     if (!success)
                     {
                         allSaved = false;
