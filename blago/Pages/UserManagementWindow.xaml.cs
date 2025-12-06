@@ -45,6 +45,9 @@ namespace blago.Pages
         private void UsersGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _selectedUser = UsersGrid.SelectedItem as Classes.UserManager.User;
+         
+
+            
 
             if (_selectedUser != null)
             {
@@ -62,6 +65,7 @@ namespace blago.Pages
 
         private void LoadUserPermissions()
         {
+
             try
             {
                 _currentPermissions = Classes.UserManager.GetAllTablePermissions(_selectedUser.UserId);

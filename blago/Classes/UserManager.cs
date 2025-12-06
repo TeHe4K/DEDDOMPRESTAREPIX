@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace blago.Classes
 {
@@ -38,6 +39,7 @@ namespace blago.Classes
         public static List<TablePermission> GetAllTablePermissions(int userId)
         {
             List<TablePermission> permissions = new List<TablePermission>();
+           
 
             try
             {
@@ -54,6 +56,7 @@ namespace blago.Classes
                 using (SqlConnection conn = DatabaseManager.CreateNewConnection())
                 {
                     conn.Open();
+
 
                     // Получаем список всех таблиц
                     List<string> allTables = new List<string>();
