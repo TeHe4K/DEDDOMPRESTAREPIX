@@ -49,12 +49,12 @@
                         <Button Content="➕ Новый" 
                                 Click="AddUserButton_Click" 
                                 Padding="10,5"
-                                Background="LightGreen"
+                                Background="#FF79CE79"
                                 Style="{DynamicResource PrimaryButton}" Width="90"/>
                         <Button Content="🗑️ Удалить" 
                                 Click="DeleteUserButton_Click" 
                                 Padding="10,5"
-                                Background="LightCoral"
+                                Background="#FFC96767"
                                 Margin="5,0,0,0"
                                 Style="{DynamicResource SecondaryButton}" Width="90"/>
                     </StackPanel>
