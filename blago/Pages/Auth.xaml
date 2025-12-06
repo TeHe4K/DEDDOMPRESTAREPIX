@@ -45,9 +45,7 @@
                                FontWeight="Bold"
                                TextAlignment="Center"/>
 
-                    <TextBlock Text="Д4нн0е пр0гр4ммн0е 06еспечение с0здан0 8 &#x0a;
-                               р43влек4тельнb|х целяX и не несет ник4к0й &#x0a;
-                               смысл0в0Z~ н4Lру3ки!;"
+                    <TextBlock Text="Д4нн0е пр0гр4ммн0е 06еспечение с0здан0 8 &#x0a; р43влек4тельнb|х целяX и не несет ник4к0й &#x0a;смысл0в0Z~ н4Lру3ки!;"
                                Style="{StaticResource CaptionText}"
                                Foreground="#FFDF5757"
                                Margin="0,18,0,0"
