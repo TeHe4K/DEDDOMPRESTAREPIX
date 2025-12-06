@@ -10,7 +10,7 @@
         Width="900"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Background="{StaticResource BgDark}">
+        Background="{StaticResource BgDark}" WindowStyle="None">
     
     <Grid Margin="10">
         <Grid.RowDefinitions>

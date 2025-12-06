@@ -6,7 +6,8 @@
       xmlns:local="clr-namespace:blago.Pages"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800" MaxHeight="450" MaxWidth="800"
-      Title="AdminPage">
+      Title="AdminPage"
+      KeyDown="Exit">
 
 
     <Grid Background="{StaticResource BgDark}">

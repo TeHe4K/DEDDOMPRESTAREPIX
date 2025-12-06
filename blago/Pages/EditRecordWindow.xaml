@@ -8,7 +8,7 @@
         Height="600"
         Width="800"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource BgDark}">
+        Background="{StaticResource BgDark}" WindowStyle="None">
 
     <Window.Resources>
         <ResourceDictionary>

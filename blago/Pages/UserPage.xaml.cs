@@ -24,5 +24,10 @@ namespace blago.Pages
         {
             InitializeComponent();
         }
+
+        private void TableList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
     }
 }

@@ -10,8 +10,8 @@ namespace blago.Classes
     public static class DatabaseManager
     {
         // Настройки подключения (можно вынести в конфиг при необходимости)
-        private static string sqlServerIp = "WIN-Q9DJ17TRB0K\\DOMPRESTARELIX";
-        public static string database = "childrens_orphanage";
+        private static string sqlServerIp = "DESKTOP-MB0MPSO\\SQLEXPRESS";
+        public static string database { get; set; }
 
         // Текущие учетные данные пользователя
         private static string currentUsername;

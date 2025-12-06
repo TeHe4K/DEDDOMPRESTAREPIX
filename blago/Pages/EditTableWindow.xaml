@@ -10,7 +10,7 @@
         Width="700"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Background="{StaticResource BgDark}">
+        Background="{StaticResource BgDark}" WindowStyle="None">
 
     <!-- Подключение Style.xaml -->
     <Window.Resources>
@@ -118,7 +118,7 @@
 
                     <ComboBox Grid.Column="3"
                               x:Name="DataTypeComboBox"
-                              Style="{StaticResource ComboBoxStyle}"
+                              Style="{StaticResource ComboBoxDark}"
                               SelectedIndex="0"
                               Width="160"
                               Margin="6,0">

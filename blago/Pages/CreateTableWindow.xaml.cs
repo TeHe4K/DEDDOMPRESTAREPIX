@@ -81,6 +81,7 @@ namespace blago.Pages
             // Очищаем поле для ввода
             txtColumnName.Text = "Column" + (dgColumns.Items.Count + 1);
         }
+       
 
         private void DeleteColumn_Click(object sender, RoutedEventArgs e)
         {

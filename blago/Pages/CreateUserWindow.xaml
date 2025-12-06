@@ -10,7 +10,7 @@
         Width="500"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize" SizeToContent="WidthAndHeight"
-        Background="{DynamicResource BgDark}">
+        Background="{DynamicResource BgDark}" WindowStyle="None">
     <Window.Resources>
         <Style TargetType="ListBox">
             <Setter Property="Background" Value="{StaticResource CardBg}"/>

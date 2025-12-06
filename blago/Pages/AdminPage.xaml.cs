@@ -672,5 +672,12 @@ namespace blago.Pages
                 return $"N'{stringValue}'";
             }
         }
+
+        private void Exit(object sender, KeyEventArgs e)
+        {
+            DatabaseManager.Logout();
+            Auth auth = new Auth();
+            this.NavigationService.Navigate(auth);
+        }
     }
 }

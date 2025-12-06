@@ -19,6 +19,14 @@ namespace blago.Pages
         {
             string username = txtUser.Text.Trim();
             string password = txtPass.Password;
+            if(DBChoice.Text == "Дом престарелых")
+            {
+                DatabaseManager.database = "elderly_care_home";
+            }
+            else
+            {
+                DatabaseManager.database = "childrens_orphanage";
+            }
 
             if (string.IsNullOrEmpty(username))
             {
@@ -90,19 +98,5 @@ namespace blago.Pages
             }
         }
 
-        private void ComboBoxAuth(object sender, ContextMenuEventArgs e)
-        {
-            if(Orphanage.IsSelected == true)
-            {
-                DatabaseManager.database = "childrens_orphanage";
-            }
-            else
-            {
-                if (Nursing_home.IsSelected == true)
-                {
-                    DatabaseManager.database = "elderly_care_home";
-                }
-            }
-        }
     }
 }

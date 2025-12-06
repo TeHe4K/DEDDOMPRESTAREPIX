@@ -10,7 +10,7 @@
         Width="600"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Background="{StaticResource BgDark}">
+        Background="{StaticResource BgDark}" WindowStyle="None">
 
     <Grid Margin="12">
         <Grid.RowDefinitions>
@@ -54,7 +54,7 @@
                 <ComboBox Grid.Column="1"
                           x:Name="cmbDataType"
                           SelectedIndex="0"
-                          Style="{StaticResource ComboBoxStyle}">
+                          Style="{StaticResource ComboBoxDark}">
                     <ComboBoxItem Content="int"/>
                     <ComboBoxItem Content="varchar(50)"/>
                     <ComboBoxItem Content="nvarchar(100)"/>
@@ -91,7 +91,7 @@
                           CanUserSortColumns="True"
                           Style="{StaticResource ModernDataGrid}"
                           HeadersVisibility="Column"
-                          RowHeaderWidth="0">
+                          RowHeaderWidth="0" Margin="0,0,0,80">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Имя столбца"
                                             Binding="{Binding ColumnName}"
