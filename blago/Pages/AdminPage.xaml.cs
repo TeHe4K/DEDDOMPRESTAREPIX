@@ -90,7 +90,7 @@ namespace blago.Pages
         {
             try
             {
-                _currentTableName = tableName; // Сохраняем имя текущей таблицы
+                _currentTableName = tableName;
 
                 string query = $"SELECT TOP 1000 * FROM [{tableName}]";
 
@@ -105,16 +105,13 @@ namespace blago.Pages
                             adapter.Fill(dataTable);
                         }
 
-                        // Устанавливаем источник данных для DataGrid
                         TableView.ItemsSource = dataTable.DefaultView;
-
-                        // Настраиваем автоматическое изменение ширины столбцов
                         TableView.AutoGenerateColumns = true;
                         TableView.CanUserAddRows = false;
                         TableView.CanUserDeleteRows = false;
                         TableView.IsReadOnly = true;
-                        TableView.SelectionMode = DataGridSelectionMode.Single; // Важно!
-                        TableView.SelectionUnit = DataGridSelectionUnit.FullRow; // Важно!
+                        TableView.SelectionMode = DataGridSelectionMode.Single;
+                        TableView.SelectionUnit = DataGridSelectionUnit.FullRow; 
                     }
                 }
             }
@@ -131,7 +128,6 @@ namespace blago.Pages
         }
         private void AddRecordToTable(object sender, RoutedEventArgs e)
         {
-            // Проверяем, выбрана ли таблица
             if (TableList.SelectedItem == null)
             {
                 MessageBox.Show("Пожалуйста, выберите таблицу для добавления записи",
@@ -144,16 +140,12 @@ namespace blago.Pages
 
             try
             {
-                // Открываем окно добавления записи
                 var addRecordWindow = new AddRecordWindow(selectedTable);
                 bool? result = addRecordWindow.ShowDialog();
 
                 if (result == true)
                 {
-                    // Обновляем данные в таблице
                     LoadTableData(selectedTable);
-
-                    // Показываем сообщение об успехе
                     MessageBox.Show("Запись успешно добавлена",
                         "Успех",
                         MessageBoxButton.OK, MessageBoxImage.Information);
@@ -177,7 +169,6 @@ namespace blago.Pages
                 return;
             }
 
-            // Проверяем, выбрана ли запись в DataGrid
             if (TableView.SelectedItem == null)
             {
                 MessageBox.Show("Пожалуйста, выберите запись для удаления",
@@ -188,19 +179,15 @@ namespace blago.Pages
 
             try
             {
-                // Получаем выбранную строку
                 DataRowView selectedRow = (DataRowView)TableView.SelectedItem;
                 DataRow row = selectedRow.Row;
 
-                // Получаем первичный ключ таблицы
                 var primaryKeys = GetPrimaryKeyColumns(_currentTableName);
 
-                // Формируем WHERE условие для удаления
                 string whereCondition = "";
 
                 if (primaryKeys.Count > 0)
                 {
-                    // Используем первичный ключ
                     StringBuilder whereBuilder = new StringBuilder();
 
                     foreach (string columnName in primaryKeys)
@@ -218,7 +205,6 @@ namespace blago.Pages
                 }
                 else
                 {
-                    // Если нет первичного ключа, используем все столбцы
                     MessageBox.Show("В таблице не найден первичный ключ. Удаление может быть неточным.",
                         "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
 
@@ -245,7 +231,6 @@ namespace blago.Pages
                     whereCondition = whereBuilder.ToString();
                 }
 
-                // Показываем подтверждение
                 MessageBoxResult result = MessageBox.Show(
                     $"Вы уверены, что хотите удалить выбранную запись из таблицы '{_currentTableName}'?",
                     "Подтверждение удаления",
@@ -255,7 +240,6 @@ namespace blago.Pages
                 if (result != MessageBoxResult.Yes)
                     return;
 
-                // Выполняем удаление
                 string deleteQuery = $"DELETE FROM [{_currentTableName}] WHERE {whereCondition}";
 
                 using (SqlConnection conn = DatabaseManager.CreateNewConnection())
@@ -271,7 +255,6 @@ namespace blago.Pages
                                 "Успех",
                                 MessageBoxButton.OK, MessageBoxImage.Information);
 
-                            // Обновляем данные в таблице
                             LoadTableData(_currentTableName);
                         }
                         else
@@ -285,7 +268,7 @@ namespace blago.Pages
             }
             catch (SqlException sqlEx)
             {
-                if (sqlEx.Number == 547) // Ошибка внешнего ключа
+                if (sqlEx.Number == 547)
                 {
                     MessageBox.Show("Невозможно удалить запись. Существуют связанные записи в других таблицах.",
                         "Ошибка удаления", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -307,7 +290,6 @@ namespace blago.Pages
 
         private void EditNote(object sender, RoutedEventArgs e)
         {
-            // Проверяем, выбрана ли таблица
             if (string.IsNullOrEmpty(_currentTableName))
             {
                 MessageBox.Show("Пожалуйста, выберите таблицу",
@@ -316,7 +298,6 @@ namespace blago.Pages
                 return;
             }
 
-            // Проверяем, выбрана ли запись в DataGrid
             if (TableView.SelectedItem == null)
             {
                 MessageBox.Show("Пожалуйста, выберите запись для редактирования",
@@ -327,11 +308,9 @@ namespace blago.Pages
 
             try
             {
-                // Пробуем получить выбранную строку
                 DataRow row = null;
                 DataRowView rowView = null;
 
-                // Способ 1: Пробуем как DataRowView
                 rowView = TableView.SelectedItem as DataRowView;
                 if (rowView != null)
                 {
@@ -339,7 +318,6 @@ namespace blago.Pages
                 }
                 else
                 {
-                    // Способ 2: Пробуем получить через ItemsSource
                     if (TableView.ItemsSource is DataView dataView)
                     {
                         int selectedIndex = TableView.SelectedIndex;
@@ -363,13 +341,11 @@ namespace blago.Pages
                 DataRow rowCopy = tempTable.NewRow();
                 rowCopy.ItemArray = row.ItemArray;
 
-                // Открываем окно редактирования записи
                 var editRecordWindow = new EditRecordWindow(_currentTableName, rowCopy);
                 bool? result = editRecordWindow.ShowDialog();
 
                 if (result == true)
                 {
-                    // Обновляем данные в таблице
                     LoadTableData(_currentTableName);
 
                     MessageBox.Show("Запись успешно обновлена",
@@ -408,10 +384,8 @@ namespace blago.Pages
 
                 if (result == true)
                 {
-                    // Обновляем список таблиц после создания
                     LoadTableList();
 
-                    // Показываем сообщение об успехе
                     MessageBox.Show("Таблица успешно создана!", "Успех",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
@@ -435,7 +409,6 @@ namespace blago.Pages
 
             string selectedTable = TableList.SelectedItem.ToString();
 
-            // Показываем окно подтверждения с подробной информацией
             MessageBoxResult result = MessageBox.Show(
                 $"Вы уверены, что хотите удалить таблицу \"{selectedTable}\"?\n\n" +
                 "⚠️  ВНИМАНИЕ:\n" +
@@ -451,13 +424,11 @@ namespace blago.Pages
             {
                 try
                 {
-                    // Запрашиваем подтверждение через дополнительное окно с вводом имени
                     var confirmWindow = new ConfirmDeleteWindow(selectedTable);
                     bool? deleteResult = confirmWindow.ShowDialog();
 
                     if (deleteResult == true)
                     {
-                        // Выполняем удаление таблицы
                         DeleteTableFromDatabase(selectedTable);
                     }
                 }
@@ -473,7 +444,6 @@ namespace blago.Pages
         {
             try
             {
-                // Проверяем существование таблицы
                 string checkQuery = @"
                     SELECT COUNT(*) 
                     FROM INFORMATION_SCHEMA.TABLES 
@@ -483,7 +453,6 @@ namespace blago.Pages
                 {
                     conn.Open();
 
-                    // Проверяем, существует ли таблица
                     using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
                     {
                         checkCmd.Parameters.AddWithValue("@tableName", tableName);
@@ -498,7 +467,6 @@ namespace blago.Pages
                         }
                     }
 
-                    // Отключаем внешние ключи, если они есть
                     try
                     {
                         string disableConstraintsQuery = @"
@@ -520,10 +488,8 @@ namespace blago.Pages
                     }
                     catch
                     {
-                        // Игнорируем ошибки при отключении ограничений
                     }
 
-                    // Удаляем таблицу
                     string deleteQuery = $"DROP TABLE [{tableName}];";
 
                     using (SqlCommand deleteCmd = new SqlCommand(deleteQuery, conn))
@@ -534,18 +500,15 @@ namespace blago.Pages
                             "Успех",
                             MessageBoxButton.OK, MessageBoxImage.Information);
 
-                        // Обновляем список таблиц
                         LoadTableList();
 
-                        // Очищаем DataGrid
                         TableView.ItemsSource = null;
                     }
                 }
             }
             catch (SqlException sqlEx)
             {
-                // Обрабатываем ошибки SQL
-                if (sqlEx.Number == 3701) // Cannot drop the table because it is being referenced by a foreign key constraint
+                if (sqlEx.Number == 3701) 
                 {
                     MessageBox.Show($"Невозможно удалить таблицу \"{tableName}\".\n" +
                                   "Существуют связанные таблицы через внешние ключи.\n\n" +
@@ -570,7 +533,6 @@ namespace blago.Pages
 
         private void EditTable(object sender, RoutedEventArgs e)
         {
-            // Проверяем, выбрана ли таблица
             if (TableList.SelectedItem == null)
             {
                 MessageBox.Show("Пожалуйста, выберите таблицу для редактирования",
@@ -583,16 +545,13 @@ namespace blago.Pages
 
             try
             {
-                // Открываем окно редактирования таблицы
                 var editTableWindow = new EditTableWindow(selectedTable);
                 bool? result = editTableWindow.ShowDialog();
 
                 if (result == true)
                 {
-                    // Обновляем список таблиц
                     LoadTableList();
 
-                    // Показываем сообщение об успехе
                     MessageBox.Show("Таблица успешно обновлена",
                         "Успех",
                         MessageBoxButton.OK, MessageBoxImage.Information);
@@ -637,7 +596,6 @@ namespace blago.Pages
             }
             catch (Exception)
             {
-                // В случае ошибки возвращаем пустой список
             }
 
             return primaryKeys;
@@ -651,7 +609,6 @@ namespace blago.Pages
 
             if (valueType == typeof(string) || valueType == typeof(DateTime) || valueType == typeof(Guid))
             {
-                // Экранируем одинарные кавычки
                 string stringValue = value.ToString().Replace("'", "''");
                 return $"N'{stringValue}'";
             }
@@ -667,7 +624,6 @@ namespace blago.Pages
             }
             else
             {
-                // Для других типов
                 string stringValue = value.ToString().Replace("'", "''");
                 return $"N'{stringValue}'";
             }

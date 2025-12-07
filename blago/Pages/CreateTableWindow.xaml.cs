@@ -2,21 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace blago.Pages
 {
-
     public partial class CreateTableWindow : Window
     {
         public class ColumnDefinition
@@ -31,8 +22,11 @@ namespace blago.Pages
         public CreateTableWindow()
         {
             InitializeComponent();
+            LoadDefaultColumns();
+        }
 
-            // Добавляем несколько столбцов по умолчанию
+        private void LoadDefaultColumns()
+        {
             dgColumns.Items.Add(new ColumnDefinition
             {
                 ColumnName = "ID",
@@ -59,131 +53,127 @@ namespace blago.Pages
 
         private void AddColumn_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtColumnName.Text))
+            string name = txtColumnName.Text.Trim();
+            if (string.IsNullOrEmpty(name))
             {
-                MessageBox.Show("Введите имя столбца", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                ShowError("Введите имя столбца");
                 return;
             }
 
-            var selectedItem = cmbDataType.SelectedItem as ComboBoxItem;
-            if (selectedItem == null) return;
+            var item = cmbDataType.SelectedItem as ComboBoxItem;
+            if (item == null)
+            {
+                ShowError("Выберите тип данных");
+                return;
+            }
 
-            string dataType = selectedItem.Content.ToString();
 
             dgColumns.Items.Add(new ColumnDefinition
             {
-                ColumnName = txtColumnName.Text.Trim(),
-                DataType = dataType,
+                ColumnName = name,
+                DataType = item.Content.ToString(),
                 AllowNull = true
             });
 
-            // Очищаем поле для ввода
-            txtColumnName.Text = "Column" + (dgColumns.Items.Count + 1);
+            txtColumnName.Text = $"Column{dgColumns.Items.Count + 1}";
         }
-       
 
         private void DeleteColumn_Click(object sender, RoutedEventArgs e)
         {
-            var button = sender as Button;
-            if (button == null) return;
-
-            var column = button.DataContext as ColumnDefinition;
-            if (column != null)
-            {
+            if (sender is Button btn && btn.DataContext is ColumnDefinition column)
                 dgColumns.Items.Remove(column);
-            }
         }
 
         private void CreateTable_Click(object sender, RoutedEventArgs e)
         {
+            if (!ValidateTable())
+                return;
+
+            try
+            {
+                string sql = BuildCreateTableQuery(txtTableName.Text.Trim());
+
+                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                {
+                    conn.Open();
+                    new SqlCommand(sql, conn).ExecuteNonQuery();
+                }
+
+                MessageBox.Show($"Таблица '{txtTableName.Text}' успешно создана!",
+                    "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                DialogResult = true;
+                Close();
+            }
+            catch (SqlException ex)
+            {
+                ShowError($"Ошибка SQL: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Ошибка: {ex.Message}");
+            }
+        }
+
+        private bool ValidateTable()
+        {
             if (string.IsNullOrWhiteSpace(txtTableName.Text))
             {
-                MessageBox.Show("Введите название таблицы", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                ShowError("Введите название таблицы");
+                return false;
             }
 
             if (dgColumns.Items.Count == 0)
             {
-                MessageBox.Show("Добавьте хотя бы один столбец", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                ShowError("Добавьте хотя бы один столбец");
+                return false;
             }
 
-            try
+            return true;
+        }
+
+        private string BuildCreateTableQuery(string tableName)
+        {
+            var sql = new StringBuilder();
+            sql.AppendLine($"CREATE TABLE [{tableName}] (");
+
+            var columnDefs = new List<string>();
+            var primaryKeys = new List<string>();
+
+            foreach (ColumnDefinition c in dgColumns.Items)
             {
-                string tableName = txtTableName.Text.Trim();
+                var def = new StringBuilder($"[{c.ColumnName}] {c.DataType}");
 
-                // Строим SQL запрос для создания таблицы
-                StringBuilder sqlBuilder = new StringBuilder();
-                sqlBuilder.AppendLine($"CREATE TABLE [{tableName}] (");
+                if (c.IsIdentity) def.Append(" IDENTITY(1,1)");
+                if (!c.AllowNull) def.Append(" NOT NULL");
 
-                List<string> columnDefinitions = new List<string>();
-                List<string> primaryKeyColumns = new List<string>();
+                columnDefs.Add(def.ToString());
 
-                foreach (ColumnDefinition column in dgColumns.Items)
-                {
-                    string columnDef = $"[{column.ColumnName}] {column.DataType}";
-
-                    if (!column.AllowNull)
-                        columnDef += " NOT NULL";
-
-                    if (column.IsIdentity)
-                        columnDef += " IDENTITY(1,1)";
-
-                    columnDefinitions.Add(columnDef);
-
-                    if (column.IsPrimaryKey)
-                        primaryKeyColumns.Add($"[{column.ColumnName}]");
-                }
-
-                sqlBuilder.AppendLine(string.Join(",\n", columnDefinitions));
-
-                // Добавляем первичный ключ, если есть
-                if (primaryKeyColumns.Count > 0)
-                {
-                    sqlBuilder.AppendLine($",CONSTRAINT [PK_{tableName}] PRIMARY KEY CLUSTERED (");
-                    sqlBuilder.AppendLine(string.Join(", ", primaryKeyColumns));
-                    sqlBuilder.AppendLine(")");
-                }
-
-                sqlBuilder.AppendLine(");");
-
-                string sqlQuery = sqlBuilder.ToString();
-
-                // Выполняем SQL запрос
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(sqlQuery, conn))
-                    {
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-
-                MessageBox.Show($"Таблица '{tableName}' успешно создана!", "Успех",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-
-                this.DialogResult = true;
-                this.Close();
+                if (c.IsPrimaryKey)
+                    primaryKeys.Add($"[{c.ColumnName}]");
             }
-            catch (SqlException sqlEx)
+
+            sql.AppendLine(string.Join(",\n", columnDefs));
+
+            if (primaryKeys.Count > 0)
             {
-                MessageBox.Show($"Ошибка SQL: {sqlEx.Message}", "Ошибка создания таблицы",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                sql.AppendLine($", CONSTRAINT [PK_{tableName}] PRIMARY KEY CLUSTERED ({string.Join(", ", primaryKeys)})");
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка создания таблицы",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+
+            sql.AppendLine(");");
+
+            return sql.ToString();
+        }
+
+        private void ShowError(string msg)
+        {
+            MessageBox.Show(msg, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
-            this.Close();
+            DialogResult = false;
+            Close();
         }
     }
 }

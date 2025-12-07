@@ -6,466 +6,320 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace blago.Pages
 {
     public partial class CreateUserWindow : Window
     {
-        private string _generatedPassword;
+        private string _generatedPassword = "";
         private bool _isCreating = false;
 
         public CreateUserWindow()
         {
             InitializeComponent();
-            LoadDatabaseRoles();
-            GeneratePasswordCheckBox_Checked(null, null);
+            LoadRoles();
+            EnableGeneratedPasswordMode();
         }
 
-        private void LoadDatabaseRoles()
+        private void LoadRoles()
         {
             try
             {
                 var roles = UserManager.GetDatabaseRoles();
                 RolesListBox.ItemsSource = roles;
 
-                // Выбираем стандартные роли по умолчанию
-                foreach (var item in RolesListBox.Items)
-                {
-                    string role = item.ToString();
-                    if (role == "db_datareader" || role == "db_datawriter")
-                    {
-                        ListBoxItem listBoxItem = RolesListBox.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
-                        if (listBoxItem != null)
-                        {
-                            listBoxItem.IsSelected = true;
-                        }
-                    }
-                }
+                SelectDefaultRoles(roles);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке ролей: {ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ShowError($"Ошибка загрузки ролей: {ex.Message}");
             }
+        }
+
+        private void SelectDefaultRoles(IEnumerable<string> roles)
+        {
+            string[] defaultRoles = { "db_datareader", "db_datawriter" };
+
+            foreach (string role in defaultRoles)
+            {
+                if (roles.Contains(role))
+                {
+                    RolesListBox.SelectedItems.Add(role);
+                }
+            }
+        }
+
+        private void EnableGeneratedPasswordMode()
+        {
+            PasswordBox.IsEnabled = false;
+            ConfirmPasswordBox.IsEnabled = false;
+
+            _generatedPassword = UserManager.GenerateSecurePassword();
+
+            GeneratedPasswordText.Text = $"Сгенерирован пароль: {_generatedPassword}";
+            PasswordBox.Password = _generatedPassword;
+            ConfirmPasswordBox.Password = _generatedPassword;
+
+            UpdatePasswordStrength(_generatedPassword);
+            UpdatePasswordMatch();
+        }
+
+        private void DisableGeneratedPasswordMode()
+        {
+            PasswordBox.IsEnabled = true;
+            ConfirmPasswordBox.IsEnabled = true;
+
+            GeneratedPasswordText.Text = "";
+            PasswordBox.Password = "";
+            ConfirmPasswordBox.Password = "";
+
+            PasswordStrength.Text = "";
+            PasswordMatch.Text = "";
         }
 
         private void GeneratePasswordCheckBox_Checked(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                PasswordBox.IsEnabled = false;
-                ConfirmPasswordBox.IsEnabled = false;
-
-                _generatedPassword = UserManager.GenerateSecurePassword();
-
-                // Безопасное отображение пароля
-                if (GeneratedPasswordText != null)
-                {
-                    GeneratedPasswordText.Text = $"Сгенерирован пароль: {_generatedPassword}";
-                }
-                else
-                {
-                    // Если элемент не найден, показываем в MessageBox
-                    MessageBox.Show($"Сгенерирован пароль: {_generatedPassword}\n\nСкопируйте его!",
-                        "Сгенерированный пароль",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
-
-                PasswordBox.Password = _generatedPassword;
-                ConfirmPasswordBox.Password = _generatedPassword;
-
-                UpdatePasswordStrength(_generatedPassword);
-                CheckPasswordMatch();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при генерации пароля: {ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            EnableGeneratedPasswordMode();
         }
 
         private void GeneratePasswordCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                PasswordBox.IsEnabled = true;
-                ConfirmPasswordBox.IsEnabled = true;
-
-                if (GeneratedPasswordText != null)
-                {
-                    GeneratedPasswordText.Text = "";
-                }
-
-                PasswordBox.Password = "";
-                ConfirmPasswordBox.Password = "";
-
-                if (PasswordStrength != null)
-                    PasswordStrength.Text = "";
-
-                if (PasswordMatch != null)
-                    PasswordMatch.Text = "";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка: {ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            DisableGeneratedPasswordMode();
         }
 
         private void UsernameTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            try
-            {
-                string username = UsernameTextBox.Text.Trim();
-
-                if (!string.IsNullOrEmpty(username))
-                {
-                    if (UserManager.SqlLoginExists(username))
-                    {
-                        if (UsernameHint != null)
-                        {
-                            UsernameHint.Text = "⚠️ Этот логин уже существует в SQL Server";
-                            UsernameHint.Foreground = System.Windows.Media.Brushes.Red;
-                        }
-                        CreateButton.IsEnabled = false;
-                    }
-                    else
-                    {
-                        if (UsernameHint != null)
-                        {
-                            UsernameHint.Text = "✓ Этот логин доступен";
-                            UsernameHint.Foreground = System.Windows.Media.Brushes.Green;
-                        }
-                        CreateButton.IsEnabled = true;
-                    }
-                }
-                else
-                {
-                    if (UsernameHint != null)
-                    {
-                        UsernameHint.Text = "Это имя будет использоваться для входа в SQL Server";
-                        UsernameHint.Foreground = System.Windows.Media.Brushes.Gray;
-                    }
-                    CreateButton.IsEnabled = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при проверке логина: {ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            ValidateUsername();
         }
 
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            try
+            if (!GeneratePasswordCheckBox.IsChecked == true)
             {
-                if (GeneratePasswordCheckBox.IsChecked == true)
-                    return;
-
-                string password = PasswordBox.Password;
-                UpdatePasswordStrength(password);
-                CheckPasswordMatch();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка: {ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-        private void UpdatePasswordStrength(string password)
-        {
-            try
-            {
-                if (PasswordStrength == null) return;
-
-                if (string.IsNullOrEmpty(password))
-                {
-                    PasswordStrength.Text = "";
-                    return;
-                }
-
-                if (UserManager.IsValidSqlPassword(password))
-                {
-                    PasswordStrength.Text = "✓ Пароль соответствует требованиям безопасности";
-                    PasswordStrength.Foreground = System.Windows.Media.Brushes.Green;
-                }
-                else
-                {
-                    PasswordStrength.Text = "⚠️ Пароль не соответствует требованиям безопасности";
-                    PasswordStrength.Foreground = System.Windows.Media.Brushes.Red;
-                }
-            }
-            catch
-            {
-                // Игнорируем ошибки при обновлении визуальных элементов
+                UpdatePasswordStrength(PasswordBox.Password);
+                UpdatePasswordMatch();
             }
         }
 
         private void ConfirmPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            try
+            if (!GeneratePasswordCheckBox.IsChecked == true)
             {
-                if (GeneratePasswordCheckBox.IsChecked == true)
-                    return;
-
-                CheckPasswordMatch();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка: {ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                UpdatePasswordMatch();
             }
         }
 
-        private void CheckPasswordMatch()
+        private void ValidateUsername()
         {
-            try
+            string username = UsernameTextBox.Text.Trim();
+
+            if (string.IsNullOrEmpty(username))
             {
-                if (PasswordMatch == null) return;
-
-                string password = PasswordBox.Password;
-                string confirmPassword = ConfirmPasswordBox.Password;
-
-                if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(confirmPassword))
-                {
-                    PasswordMatch.Text = "";
-                    return;
-                }
-
-                if (password == confirmPassword)
-                {
-                    PasswordMatch.Text = "✓ Пароли совпадают";
-                    PasswordMatch.Foreground = System.Windows.Media.Brushes.Green;
-                }
-                else
-                {
-                    PasswordMatch.Text = "⚠️ Пароли не совпадают";
-                    PasswordMatch.Foreground = System.Windows.Media.Brushes.Red;
-                }
+                SetUsernameHint("Это имя будет использоваться для входа в SQL Server", Brushes.Gray);
+                CreateButton.IsEnabled = false;
+                return;
             }
-            catch
+
+            if (UserManager.SqlLoginExists(username))
             {
-                // Игнорируем ошибки при обновлении визуальных элементов
+                SetUsernameHint("⚠️ Этот логин уже существует", Brushes.Red);
+                CreateButton.IsEnabled = false;
             }
+            else
+            {
+                SetUsernameHint("✓ Логин доступен", Brushes.Green);
+                CreateButton.IsEnabled = true;
+            }
+        }
+
+        private void SetUsernameHint(string text, Brush color)
+        {
+            UsernameHint.Text = text;
+            UsernameHint.Foreground = color;
+        }
+
+        private void UpdatePasswordStrength(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+            {
+                PasswordStrength.Text = "";
+                return;
+            }
+
+            bool ok = UserManager.IsValidSqlPassword(password);
+
+            PasswordStrength.Text = ok
+                ? "✓ Пароль соответствует требованиям"
+                : "⚠️ Пароль не соответствует требованиям";
+
+            PasswordStrength.Foreground = ok ? Brushes.Green : Brushes.Red;
+        }
+
+        private void UpdatePasswordMatch()
+        {
+            if (string.IsNullOrEmpty(PasswordBox.Password) ||
+                string.IsNullOrEmpty(ConfirmPasswordBox.Password))
+            {
+                PasswordMatch.Text = "";
+                return;
+            }
+
+            bool match = PasswordBox.Password == ConfirmPasswordBox.Password;
+
+            PasswordMatch.Text = match
+                ? "✓ Пароли совпадают"
+                : "⚠️ Пароли не совпадают";
+
+            PasswordMatch.Foreground = match ? Brushes.Green : Brushes.Red;
         }
 
         private async void CreateButton_Click(object sender, RoutedEventArgs e)
         {
-            // Защита от повторного нажатия
             if (_isCreating)
                 return;
 
+            if (!ValidateBeforeCreate())
+                return;
+
             _isCreating = true;
+            CreateButton.IsEnabled = false;
+            CreateButton.Content = "Создание...";
 
             string username = UsernameTextBox.Text.Trim();
             string fullName = FullNameTextBox.Text.Trim();
-            string password = GeneratePasswordCheckBox.IsChecked == true ? _generatedPassword : PasswordBox.Password;
-            string confirmPassword = ConfirmPasswordBox.Password;
-
-            // Валидация
-            if (string.IsNullOrEmpty(username))
-            {
-                MessageBox.Show("Введите логин SQL Server",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                UsernameTextBox.Focus();
-                _isCreating = false;
-                return;
-            }
-
-            if (string.IsNullOrEmpty(fullName))
-            {
-                MessageBox.Show("Введите ФИО пользователя",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                FullNameTextBox.Focus();
-                _isCreating = false;
-                return;
-            }
-
-            if (string.IsNullOrEmpty(password))
-            {
-                MessageBox.Show("Введите пароль",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                PasswordBox.Focus();
-                _isCreating = false;
-                return;
-            }
-
-            if (!UserManager.IsValidSqlPassword(password))
-            {
-                MessageBox.Show("Пароль не соответствует требованиям безопасности SQL Server:\n" +
-                              "- Минимум 8 символов\n" +
-                              "- Заглавные и строчные буквы\n" +
-                              "- Цифры\n" +
-                              "- Специальные символы (!@#$%^&* и т.д.)",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                PasswordBox.Focus();
-                _isCreating = false;
-                return;
-            }
-
-            if (password != confirmPassword)
-            {
-                MessageBox.Show("Пароли не совпадают",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                ConfirmPasswordBox.Focus();
-                _isCreating = false;
-                return;
-            }
+            string password = GeneratePasswordCheckBox.IsChecked == true
+                ? _generatedPassword
+                : PasswordBox.Password;
 
             try
             {
-                // Показываем индикатор загрузки
-                CreateButton.IsEnabled = false;
-                CreateButton.Content = "Создание...";
+                string sqlPassword;
 
-                string generatedPassword;
+                bool created = UserManager.CreateUserWithSqlLogin(username, password, fullName, out sqlPassword);
 
-                // 1. Создаем пользователя в SQL Server и нашей таблице
-                bool userCreated = UserManager.CreateUserWithSqlLogin(username, password, fullName, out generatedPassword);
-
-                if (userCreated)
+                if (!created)
                 {
-                    // 2. Ждем создания пользователя
-                    await Task.Delay(1000);
-
-                    // 3. Назначаем выбранные роли
-                    var selectedRoles = RolesListBox.SelectedItems.Cast<string>().ToList();
-                    bool hasAdminRole = false;
-                    List<string> successfullyGrantedRoles = new List<string>();
-
-                    foreach (string role in selectedRoles)
-                    {
-                        try
-                        {
-                            await Task.Delay(100);
-                            bool roleGranted = await Task.Run(() => UserManager.GrantDatabaseRole(username, role));
-
-                            if (roleGranted)
-                            {
-                                successfullyGrantedRoles.Add(role);
-
-                                // Проверяем, является ли роль административной
-                                if (IsAdminRole(role))
-                                {
-                                    hasAdminRole = true;
-                                    // Добавляем в таблицу администраторов
-                                    UserManager.AddToAdmins(username, DatabaseManager.GetCurrentUsername() ?? "system");
-                                }
-                            }
-                            else
-                            {
-                                MessageBox.Show($"Не удалось назначить роль '{role}'",
-                                    "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Не удалось назначить роль '{role}': {ex.Message}",
-                                "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        }
-                    }
-
-                    // 4. Показываем информацию о созданном пользователе
-                    ShowSuccessMessage(username, generatedPassword, successfullyGrantedRoles, hasAdminRole);
-
-                    this.DialogResult = true;
-                    this.Close();
+                    ShowError("Не удалось создать пользователя");
+                    return;
                 }
-                else
-                {
-                    MessageBox.Show("Не удалось создать пользователя. Возможно, недостаточно прав для создания SQL Login.",
-                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+
+                await Task.Delay(1000);
+
+                await GrantSelectedRoles(username);
+
+                ShowSuccess(username, sqlPassword);
+
+                DialogResult = true;
+                Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при создании пользователя: {ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError($"Ошибка при создании пользователя: {ex.Message}");
             }
             finally
             {
+                _isCreating = false;
                 CreateButton.IsEnabled = true;
                 CreateButton.Content = "Создать";
-                _isCreating = false;
             }
         }
 
-        private void ShowSuccessMessage(string username, string password, List<string> roles, bool hasAdminRole)
+        private bool ValidateBeforeCreate()
         {
-            StringBuilder message = new StringBuilder();
-            message.AppendLine("✓ Пользователь успешно создан!");
-            message.AppendLine();
-            message.AppendLine($"Логин SQL Server: {username}");
-            message.AppendLine($"Пароль: {password}");
-
-            if (roles.Count > 0)
+            if (string.IsNullOrWhiteSpace(UsernameTextBox.Text))
             {
-                message.AppendLine($"Назначенные роли: {string.Join(", ", roles)}");
-
-                if (hasAdminRole)
-                {
-                    message.AppendLine();
-                    message.AppendLine("⚠️ ВНИМАНИЕ: Пользователю назначены административные роли!");
-                    message.AppendLine("При входе в систему он будет перенаправлен на страницу администратора.");
-                }
+                ShowError("Введите логин SQL Server");
+                UsernameTextBox.Focus();
+                return false;
             }
 
-            message.AppendLine();
-            message.AppendLine("Для входа в приложение:");
-            message.AppendLine($"Логин: {username}");
-            message.AppendLine($"Пароль: {password}");
-            message.AppendLine($"Сервер: WIN-Q9DJ17TRB0K\\DOMPRESTARELIX");
+            if (string.IsNullOrWhiteSpace(FullNameTextBox.Text))
+            {
+                ShowError("Введите ФИО пользователя");
+                FullNameTextBox.Focus();
+                return false;
+            }
+
+            string pwd = GeneratePasswordCheckBox.IsChecked == true
+                ? _generatedPassword
+                : PasswordBox.Password;
+
+            if (!UserManager.IsValidSqlPassword(pwd))
+            {
+                ShowError("Пароль не соответствует требованиям SQL Server");
+                return false;
+            }
+
+            if (!GeneratePasswordCheckBox.IsChecked == true &&
+                PasswordBox.Password != ConfirmPasswordBox.Password)
+            {
+                ShowError("Пароли не совпадают");
+                return false;
+            }
+
+            return true;
+        }
+
+        private async Task GrantSelectedRoles(string username)
+        {
+            var roles = RolesListBox.SelectedItems.Cast<string>().ToList();
+
+            foreach (string role in roles)
+            {
+                try
+                {
+                    await Task.Delay(100);
+                    await Task.Run(() => UserManager.GrantDatabaseRole(username, role));
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        private void ShowSuccess(string username, string password)
+        {
+            StringBuilder msg = new StringBuilder();
+
+            msg.AppendLine("✓ Пользователь создан!");
+            msg.AppendLine();
+            msg.AppendLine($"Логин: {username}");
+            msg.AppendLine($"Пароль: {password}");
+            msg.AppendLine();
+            msg.AppendLine("Роли:");
+            msg.AppendLine(string.Join("\n", RolesListBox.SelectedItems.Cast<string>()));
 
             if (GeneratePasswordCheckBox.IsChecked == true)
             {
-                message.AppendLine();
-                message.AppendLine("⚠️ Сохраните пароль! Он больше не будет показан.");
+                msg.AppendLine();
+                msg.AppendLine("⚠️ Сохраните пароль, он больше не будет показан.");
             }
 
-            MessageBox.Show(message.ToString(), "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(msg.ToString(), "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private bool IsAdminRole(string roleName)
+        private void ShowError(string msg)
         {
-            try
-            {
-                string[] adminRoles = {
-                    "db_owner",
-                    "db_securityadmin",
-                    "db_accessadmin",
-                    "sysadmin",
-                    "securityadmin",
-                    "serveradmin",
-                    "db_ddladmin"
-                };
-
-                return adminRoles.Contains(roleName, StringComparer.OrdinalIgnoreCase);
-            }
-            catch
-            {
-                return false;
-            }
+            MessageBox.Show(msg, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             if (!_isCreating)
             {
-                this.DialogResult = false;
-                this.Close();
+                DialogResult = false;
+                Close();
             }
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            // Предотвращаем закрытие во время создания пользователя
             if (_isCreating)
             {
-                MessageBox.Show("Пожалуйста, дождитесь завершения создания пользователя",
-                    "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Дождитесь завершения создания пользователя", "Внимание",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+
                 e.Cancel = true;
             }
         }

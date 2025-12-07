@@ -2,23 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace blago.Pages
 {
-    
     public partial class EditTableWindow : Window
     {
         public class TableColumn
@@ -31,50 +21,35 @@ namespace blago.Pages
         }
 
         private string _tableName;
-        private List<TableColumn> _originalColumns = new List<TableColumn>();
+        private readonly List<TableColumn> _originalColumns = new List<TableColumn>();
 
         public EditTableWindow(string tableName)
         {
             InitializeComponent();
             _tableName = tableName;
 
-            // Заполняем начальные данные
             CurrentTableNameText.Text = tableName;
             NewTableNameTextBox.Text = tableName;
 
-            // Загружаем информацию о таблице
             LoadTableInfo();
         }
 
         private void LoadTableInfo()
         {
-            try
-            {
-                // Загружаем количество строк
-                LoadRowCount();
-
-                // Загружаем столбцы таблицы
-                LoadTableColumns();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка загрузки информации: {ex.Message}",
-                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            LoadRowCount();
+            LoadTableColumns();
         }
 
         private void LoadRowCount()
         {
             try
             {
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                using (var conn = DatabaseManager.CreateNewConnection())
                 {
                     conn.Open();
-                    string query = $"SELECT COUNT(*) FROM [{_tableName}]";
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    using (var cmd = new SqlCommand($"SELECT COUNT(*) FROM [{_tableName}]", conn))
                     {
-                        int count = (int)cmd.ExecuteScalar();
-                        RowCountText.Text = $"Количество записей: {count}";
+                        RowCountText.Text = $"Количество записей: {(int)cmd.ExecuteScalar()}";
                     }
                 }
             }
@@ -86,37 +61,35 @@ namespace blago.Pages
 
         private void LoadTableColumns()
         {
+            string query = @"
+                SELECT 
+                    c.name AS ColumnName,
+                    t.name AS DataType,
+                    c.is_nullable AS AllowNull,
+                    CASE 
+                        WHEN EXISTS (
+                            SELECT 1 
+                            FROM sys.index_columns ic
+                            JOIN sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+                            WHERE ic.object_id = c.object_id 
+                            AND ic.column_id = c.column_id 
+                            AND i.is_primary_key = 1
+                        ) THEN 1 ELSE 0 END AS IsPrimaryKey
+                FROM sys.columns c
+                JOIN sys.types t ON c.user_type_id = t.user_type_id
+                WHERE c.object_id = OBJECT_ID(@tableName)
+                ORDER BY c.column_id";
+
             try
             {
-                string query = @"
-                    SELECT 
-                        c.name AS ColumnName,
-                        t.name AS DataType,
-                        c.is_nullable AS AllowNull,
-                        CASE 
-                            WHEN EXISTS (
-                                SELECT 1 
-                                FROM sys.index_columns ic
-                                JOIN sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
-                                WHERE ic.object_id = c.object_id 
-                                AND ic.column_id = c.column_id 
-                                AND i.is_primary_key = 1
-                            ) THEN 1
-                            ELSE 0
-                        END AS IsPrimaryKey
-                    FROM sys.columns c
-                    JOIN sys.types t ON c.user_type_id = t.user_type_id
-                    WHERE c.object_id = OBJECT_ID(@tableName)
-                    ORDER BY c.column_id";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                using (var conn = DatabaseManager.CreateNewConnection())
                 {
                     conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    using (var cmd = new SqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("@tableName", _tableName);
 
-                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        using (var reader = cmd.ExecuteReader())
                         {
                             ColumnsDataGrid.Items.Clear();
                             _originalColumns.Clear();
@@ -148,249 +121,184 @@ namespace blago.Pages
 
         private void AddColumnButton_Click(object sender, RoutedEventArgs e)
         {
-            string columnName = NewColumnNameTextBox.Text.Trim();
-
-            if (string.IsNullOrWhiteSpace(columnName))
+            string name = NewColumnNameTextBox.Text.Trim();
+            if (string.IsNullOrEmpty(name))
             {
-                MessageBox.Show("Введите имя столбца", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Введите имя столбца", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // Проверяем, существует ли уже столбец с таким именем
-            foreach (TableColumn column in ColumnsDataGrid.Items)
+            foreach (TableColumn c in ColumnsDataGrid.Items)
             {
-                if (column.ColumnName.Equals(columnName, StringComparison.OrdinalIgnoreCase))
+                if (c.ColumnName.Equals(name, StringComparison.OrdinalIgnoreCase))
                 {
-                    MessageBox.Show("Столбец с таким именем уже существует", "Ошибка",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Столбец уже существует", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
             }
 
-            // Получаем выбранный тип данных
-            string dataType = "nvarchar(100)";
-            if (DataTypeComboBox.SelectedItem is ComboBoxItem selectedItem)
-            {
-                dataType = selectedItem.Content.ToString();
-            }
+            string type = "nvarchar(100)";
+            if (DataTypeComboBox.SelectedItem is ComboBoxItem item)
+                type = item.Content.ToString();
 
-            // Добавляем новый столбец
-            var newColumn = new TableColumn
+            ColumnsDataGrid.Items.Add(new TableColumn
             {
-                ColumnName = columnName,
-                DataType = dataType,
+                ColumnName = name,
+                DataType = type,
                 AllowNull = AllowNullCheckBox.IsChecked ?? true,
-                IsPrimaryKey = false,
                 IsExisting = false
-            };
+            });
 
-            ColumnsDataGrid.Items.Add(newColumn);
-
-            // Очищаем поле ввода
             NewColumnNameTextBox.Text = "NewColumn";
         }
 
         private void DeleteColumnButton_Click(object sender, RoutedEventArgs e)
         {
-            var button = sender as Button;
-            if (button == null) return;
+            var column = (sender as Button)?.DataContext as TableColumn;
+            if (column == null) return;
 
-            var column = button.DataContext as TableColumn;
-            if (column != null)
+            if (column.IsExisting)
             {
-                // Для существующих столбцов показываем предупреждение
-                if (column.IsExisting)
-                {
-                    MessageBoxResult result = MessageBox.Show(
-                        $"Вы уверены, что хотите удалить существующий столбец '{column.ColumnName}'?\n" +
-                        "Это действие может привести к потере данных!",
-                        "Подтверждение удаления",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Warning);
+                var r = MessageBox.Show(
+                    $"Удалить столбец '{column.ColumnName}'? Возможна потеря данных.",
+                    "Подтверждение",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
 
-                    if (result != MessageBoxResult.Yes)
-                        return;
-                }
-
-                ColumnsDataGrid.Items.Remove(column);
+                if (r != MessageBoxResult.Yes) return;
             }
+
+            ColumnsDataGrid.Items.Remove(column);
         }
 
         private void ClearColumnsButton_Click(object sender, RoutedEventArgs e)
         {
-            // Удаляем только новые столбцы (не существующие)
-            var itemsToRemove = new List<TableColumn>();
+            var list = new List<TableColumn>();
+            foreach (TableColumn c in ColumnsDataGrid.Items)
+                if (!c.IsExisting) list.Add(c);
 
-            foreach (TableColumn column in ColumnsDataGrid.Items)
-            {
-                if (!column.IsExisting)
-                {
-                    itemsToRemove.Add(column);
-                }
-            }
-
-            foreach (var column in itemsToRemove)
-            {
-                ColumnsDataGrid.Items.Remove(column);
-            }
+            foreach (var c in list)
+                ColumnsDataGrid.Items.Remove(c);
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                string newTableName = NewTableNameTextBox.Text.Trim();
-
-                // Проверяем новое имя таблицы
-                if (string.IsNullOrWhiteSpace(newTableName))
+                string newName = NewTableNameTextBox.Text.Trim();
+                if (string.IsNullOrEmpty(newName))
                 {
                     MessageBox.Show("Введите имя таблицы", "Ошибка",
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                // Получаем текущие столбцы
-                List<TableColumn> currentColumns = new List<TableColumn>();
-                foreach (TableColumn column in ColumnsDataGrid.Items)
-                {
-                    currentColumns.Add(column);
-                }
+                var current = new List<TableColumn>();
+                foreach (TableColumn c in ColumnsDataGrid.Items)
+                    current.Add(c);
 
-                // Проверяем, есть ли изменения
-                if (!HasChanges(newTableName, currentColumns))
+                if (!HasChanges(newName, current))
                 {
-                    MessageBox.Show("Нет изменений для сохранения", "Информация",
+                    MessageBox.Show("Нет изменений", "Информация",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
-                // Подтверждение сохранения
-                MessageBoxResult confirm = MessageBox.Show(
-                    "Вы уверены, что хотите сохранить изменения?",
+                var confirm = MessageBox.Show(
+                    "Сохранить изменения?",
                     "Подтверждение",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
 
-                if (confirm != MessageBoxResult.Yes)
-                    return;
+                if (confirm != MessageBoxResult.Yes) return;
 
-                // Выполняем изменения
-                ApplyChanges(newTableName, currentColumns);
+                ApplyChanges(newName, current);
 
-                MessageBox.Show("Изменения успешно сохранены", "Успех",
+                MessageBox.Show("Изменения сохранены", "Успех",
                     MessageBoxButton.OK, MessageBoxImage.Information);
 
-                this.DialogResult = true;
-                this.Close();
+                DialogResult = true;
+                Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка сохранения: {ex.Message}", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка сохранения: {ex.Message}",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private bool HasChanges(string newTableName, List<TableColumn> currentColumns)
+        private bool HasChanges(string newName, List<TableColumn> current)
         {
-            // Проверяем изменение имени таблицы
-            if (newTableName != _tableName)
-                return true;
+            if (newName != _tableName) return true;
+            if (current.Count != _originalColumns.Count) return true;
 
-            // Проверяем изменения в столбцах
-            if (currentColumns.Count != _originalColumns.Count)
-                return true;
-
-            // Проверяем изменения отдельных столбцов
-            foreach (var currentColumn in currentColumns)
+            foreach (var c in current)
             {
-                var originalColumn = _originalColumns.Find(oc => oc.ColumnName == currentColumn.ColumnName);
-
-                if (originalColumn == null)
-                    return true; // Новый столбец
-
-                if (originalColumn.DataType != currentColumn.DataType ||
-                    originalColumn.AllowNull != currentColumn.AllowNull ||
-                    originalColumn.IsPrimaryKey != currentColumn.IsPrimaryKey)
+                var o = _originalColumns.Find(x => x.ColumnName == c.ColumnName);
+                if (o == null) return true;
+                if (o.DataType != c.DataType || o.AllowNull != c.AllowNull || o.IsPrimaryKey != c.IsPrimaryKey)
                     return true;
             }
 
             return false;
         }
 
-        private void ApplyChanges(string newTableName, List<TableColumn> currentColumns)
+        private void ApplyChanges(string newName, List<TableColumn> current)
         {
-            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            using (var conn = DatabaseManager.CreateNewConnection())
             {
                 conn.Open();
-
-                using (SqlTransaction transaction = conn.BeginTransaction())
+                using (var tr = conn.BeginTransaction())
                 {
                     try
                     {
-                        // 1. Переименование таблицы (если нужно)
-                        if (newTableName != _tableName)
+                        if (newName != _tableName)
                         {
-                            string renameQuery = $"EXEC sp_rename '{_tableName}', '{newTableName}'";
-                            using (SqlCommand cmd = new SqlCommand(renameQuery, conn, transaction))
-                            {
+                            using (var cmd = new SqlCommand($"EXEC sp_rename '{_tableName}', '{newName}'", conn, tr))
                                 cmd.ExecuteNonQuery();
-                            }
-                            _tableName = newTableName;
+
+                            _tableName = newName;
                         }
 
-                        // 2. Определяем новые и удаленные столбцы
-                        var newColumns = currentColumns.FindAll(c => !c.IsExisting);
-                        var deletedColumns = _originalColumns.FindAll(oc =>
-                            !currentColumns.Exists(c => c.ColumnName == oc.ColumnName));
+                        var newColumns = current.FindAll(c => !c.IsExisting);
+                        var deleted = _originalColumns.FindAll(o => !current.Exists(c => c.ColumnName == o.ColumnName));
 
-                        // 3. Удаляем столбцы
-                        foreach (var column in deletedColumns)
+                        foreach (var col in deleted)
                         {
-                            string dropQuery = $"ALTER TABLE [{_tableName}] DROP COLUMN [{column.ColumnName}]";
-                            using (SqlCommand cmd = new SqlCommand(dropQuery, conn, transaction))
-                            {
+                            using (var cmd = new SqlCommand(
+                                $"ALTER TABLE [{_tableName}] DROP COLUMN [{col.ColumnName}]", conn, tr))
                                 cmd.ExecuteNonQuery();
-                            }
                         }
 
-                        // 4. Добавляем новые столбцы
-                        foreach (var column in newColumns)
+                        foreach (var col in newColumns)
                         {
-                            string nullClause = column.AllowNull ? "NULL" : "NOT NULL";
-                            string addQuery = $"ALTER TABLE [{_tableName}] ADD [{column.ColumnName}] {column.DataType} {nullClause}";
-
-                            using (SqlCommand cmd = new SqlCommand(addQuery, conn, transaction))
-                            {
+                            string nullPart = col.AllowNull ? "NULL" : "NOT NULL";
+                            using (var cmd = new SqlCommand(
+                                $"ALTER TABLE [{_tableName}] ADD [{col.ColumnName}] {col.DataType} {nullPart}", conn, tr))
                                 cmd.ExecuteNonQuery();
-                            }
                         }
 
-                        // 5. Изменяем существующие столбцы (только NULL/NOT NULL)
-                        foreach (var currentColumn in currentColumns)
+                        foreach (var col in current)
                         {
-                            if (currentColumn.IsExisting)
+                            if (col.IsExisting)
                             {
-                                var originalColumn = _originalColumns.Find(oc => oc.ColumnName == currentColumn.ColumnName);
-
-                                if (originalColumn != null && originalColumn.AllowNull != currentColumn.AllowNull)
+                                var orig = _originalColumns.Find(o => o.ColumnName == col.ColumnName);
+                                if (orig != null && orig.AllowNull != col.AllowNull)
                                 {
-                                    string alterQuery = $"ALTER TABLE [{_tableName}] ALTER COLUMN [{currentColumn.ColumnName}] {currentColumn.DataType} " +
-                                                       $"{(currentColumn.AllowNull ? "NULL" : "NOT NULL")}";
-
-                                    using (SqlCommand cmd = new SqlCommand(alterQuery, conn, transaction))
-                                    {
+                                    string nullPart = col.AllowNull ? "NULL" : "NOT NULL";
+                                    using (var cmd = new SqlCommand(
+                                        $"ALTER TABLE [{_tableName}] ALTER COLUMN [{col.ColumnName}] {col.DataType} {nullPart}",
+                                        conn, tr))
                                         cmd.ExecuteNonQuery();
-                                    }
                                 }
                             }
                         }
 
-                        transaction.Commit();
+                        tr.Commit();
                     }
                     catch
                     {
-                        transaction.Rollback();
+                        tr.Rollback();
                         throw;
                     }
                 }
@@ -399,8 +307,8 @@ namespace blago.Pages
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
-            this.Close();
+            DialogResult = false;
+            Close();
         }
     }
 }

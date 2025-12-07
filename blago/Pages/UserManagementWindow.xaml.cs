@@ -1,17 +1,9 @@
 ﻿using blago.Classes;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+
 
 namespace blago.Pages
 {
@@ -30,7 +22,7 @@ namespace blago.Pages
         {
             try
             {
-                var users = Classes. UserManager.GetAllUsers();
+                var users = Classes.UserManager.GetAllUsers();
                 UsersGrid.ItemsSource = users;
             }
             catch (Exception ex)

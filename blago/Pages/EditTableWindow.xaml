@@ -12,16 +12,6 @@
         ResizeMode="NoResize"
         Background="{StaticResource BgDark}" WindowStyle="ToolWindow">
 
-    <!-- Подключение Style.xaml -->
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/blago;component/Style.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
-
-
     <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -29,8 +19,6 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-
-        <!-- ───── БЛОК ИНФОРМАЦИИ ───── -->
         <Border Background="{StaticResource CardBg}"
                 CornerRadius="14"
                 Padding="14"
@@ -73,15 +61,12 @@
             </StackPanel>
         </Border>
 
-
-        <!-- ───── БЛОК ДОБАВЛЕНИЯ СТОЛБЦОВ ───── -->
         <Grid Grid.Row="1" Margin="0,12,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Панель добавления -->
             <Border Background="{StaticResource CardBg}"
                     CornerRadius="14"
                     Padding="12"
@@ -157,8 +142,6 @@
                 </Grid>
             </Border>
 
-
-            <!-- Таблица -->
             <Border Background="{StaticResource CardBg}"
                     CornerRadius="14"
                     Padding="8"
@@ -201,8 +184,6 @@
 
         </Grid>
 
-
-        <!-- ───── НИЖНИЕ КНОПКИ ───── -->
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
