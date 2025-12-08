@@ -45,7 +45,7 @@ namespace blago.Pages
 
                     if (!isAdmin)
                     {
-                        isAdmin = DatabaseManager.IsUserAdminInDatabase(username);
+                        isAdmin = DatabaseManager.CheckUserIsAdmin(username);
 
                         if (isAdmin)
                             DatabaseManager.IsAdmin();

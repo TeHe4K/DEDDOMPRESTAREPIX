@@ -5,18 +5,19 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows;
 
 namespace blago.Classes
 {
-    public class UserManager
+    public static class UserManager
     {
+        // ============================
+        // MODELS
+        // ============================
+
         public class User
         {
             public int UserId { get; set; }
             public string Username { get; set; }
-            public string Password { get; set; } // Добавляем поле для пароля
             public string FullName { get; set; }
             public bool IsActive { get; set; }
             public DateTime CreatedDate { get; set; }
@@ -33,830 +34,551 @@ namespace blago.Classes
             public bool CanAdd { get; set; }
         }
 
-        // ========== ДОБАВЛЯЮ НЕДОСТАЮЩИЕ МЕТОДЫ ==========
+        // ============================
+        // SQL HELPERS
+        // ============================
 
-        // 1. Метод GetAllTablePermissions
-        public static int GetUserIdByUsername(string username)
-{
-    using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-    {
-        conn.Open();
-        string sql = "SELECT UserId FROM db_Users WHERE Username = @u";
-
-        SqlCommand cmd = new SqlCommand(sql, conn);
-        cmd.Parameters.AddWithValue("@u", username);
-
-        object result = cmd.ExecuteScalar();
-
-        if (result == null)
-            throw new Exception("UserId не найден для пользователя: " + username);
-
-        return Convert.ToInt32(result);
-    }
-}
-
-
-        public static List<TablePermission> GetAllTablePermissions(int userId)
+        private static int ExecuteNonQuery(SqlConnection conn, string sql, params SqlParameter[] p)
         {
-            List<TablePermission> permissions = new List<TablePermission>();
-           
-
-            try
+            using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
-                // Сначала получаем все таблицы (исключая системные и таблицы пользователей)
-                string tablesQuery = @"
-                    SELECT TABLE_NAME 
-                    FROM INFORMATION_SCHEMA.TABLES 
-                    WHERE TABLE_TYPE = 'BASE TABLE'
-                    AND TABLE_NAME NOT LIKE 'sys%'
-                    AND TABLE_NAME NOT LIKE 'MS%'
-                    AND TABLE_NAME NOT IN ('db_Users', 'UserTablePermissions')
-                    ORDER BY TABLE_NAME";
+                if (p != null) cmd.Parameters.AddRange(p);
+                return cmd.ExecuteNonQuery();
+            }
+        }
 
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+        private static object ExecuteScalar(SqlConnection conn, string sql, params SqlParameter[] p)
+        {
+            using (SqlCommand cmd = new SqlCommand(sql, conn))
+            {
+                if (p != null) cmd.Parameters.AddRange(p);
+                return cmd.ExecuteScalar();
+            }
+        }
+
+        private static SqlDataReader ExecuteReader(SqlConnection conn, string sql, params SqlParameter[] p)
+        {
+            SqlCommand cmd = new SqlCommand(sql, conn);
+            if (p != null) cmd.Parameters.AddRange(p);
+            return cmd.ExecuteReader();
+        }
+
+        // ============================
+        // BASIC USER OPERATIONS
+        // ============================
+
+        public static int GetUserIdByUsername(string username)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+                object result = ExecuteScalar(conn,
+                    "SELECT UserId FROM db_Users WHERE Username=@u",
+                    new SqlParameter("@u", username));
+
+                if (result == null)
+                    throw new Exception("UserId не найден для: " + username);
+
+                return Convert.ToInt32(result);
+            }
+        }
+
+        public static List<User> GetAllUsers()
+        {
+            List<User> list = new List<User>();
+
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+                using (SqlDataReader r = ExecuteReader(conn,
+                    @"SELECT UserId, Username, FullName, IsActive, CreatedDate, SqlLoginName, DatabaseUserName 
+                      FROM db_Users ORDER BY Username"))
                 {
-                    conn.Open();
-
-
-                    // Получаем список всех таблиц
-                    List<string> allTables = new List<string>();
-                    using (SqlCommand cmd = new SqlCommand(tablesQuery, conn))
+                    while (r.Read())
                     {
-                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        list.Add(new User
                         {
-                            while (reader.Read())
-                            {
-                                allTables.Add(reader["TABLE_NAME"].ToString());
-                            }
-                        }
-                    }
-
-                    // Для каждой таблицы получаем права пользователя
-                    foreach (string tableName in allTables)
-                    {
-                        // Получаем права из таблицы UserTablePermissions
-                        string permissionQuery = @"
-                            SELECT CanView, CanEdit, CanDelete, CanAdd 
-                            FROM UserTablePermissions 
-                            WHERE UserId = @userId AND TableName = @tableName";
-
-                        TablePermission permission = new TablePermission
-                        {
-                            TableName = tableName,
-                            CanView = false,
-                            CanEdit = false,
-                            CanDelete = false,
-                            CanAdd = false
-                        };
-
-                        using (SqlCommand cmd = new SqlCommand(permissionQuery, conn))
-                        {
-                            cmd.Parameters.AddWithValue("@userId", userId);
-                            cmd.Parameters.AddWithValue("@tableName", tableName);
-
-                            using (SqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                if (reader.Read())
-                                {
-                                    permission.CanView = Convert.ToBoolean(reader["CanView"]);
-                                    permission.CanEdit = Convert.ToBoolean(reader["CanEdit"]);
-                                    permission.CanDelete = Convert.ToBoolean(reader["CanDelete"]);
-                                    permission.CanAdd = Convert.ToBoolean(reader["CanAdd"]);
-                                }
-                            }
-                        }
-
-                        permissions.Add(permission);
+                            UserId = (int)r["UserId"],
+                            Username = r["Username"].ToString(),
+                            FullName = r["FullName"].ToString(),
+                            IsActive = (bool)r["IsActive"],
+                            CreatedDate = (DateTime)r["CreatedDate"],
+                            SqlLoginName = r["SqlLoginName"].ToString(),
+                            DatabaseUserName = r["DatabaseUserName"].ToString()
+                        });
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                // В случае ошибки возвращаем пустой список
-                Console.WriteLine($"Ошибка при получении прав доступа: {ex.Message}");
-            }
 
-            return permissions;
+            return list;
         }
 
-        // 2. Метод DeleteUser (альтернативное название для DeleteUserWithSqlLogin)
+        public static User GetUserById(int userId)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+                using (SqlDataReader r = ExecuteReader(conn,
+                    @"SELECT UserId, Username, FullName, IsActive, CreatedDate, SqlLoginName, DatabaseUserName
+                      FROM db_Users WHERE UserId=@id",
+                    new SqlParameter("@id", userId)))
+                {
+                    if (r.Read())
+                    {
+                        return new User
+                        {
+                            UserId = (int)r["UserId"],
+                            Username = r["Username"].ToString(),
+                            FullName = r["FullName"].ToString(),
+                            IsActive = (bool)r["IsActive"],
+                            CreatedDate = (DateTime)r["CreatedDate"],
+                            SqlLoginName = r["SqlLoginName"].ToString(),
+                            DatabaseUserName = r["DatabaseUserName"].ToString()
+                        };
+                    }
+                    return null;
+                }
+            }
+        }
+
+        public static bool UpdateUser(int userId, string fullName, bool isActive)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+                return ExecuteNonQuery(conn,
+                    @"UPDATE db_Users SET FullName=@f, IsActive=@a WHERE UserId=@id",
+                    new SqlParameter("@f", fullName),
+                    new SqlParameter("@a", isActive),
+                    new SqlParameter("@id", userId)) > 0;
+            }
+        }
+
+        // ============================
+        // PASSWORD + SECURITY
+        // ============================
+
+        public static bool IsValidSqlPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password) || password.Length < 8) return false;
+
+            return Regex.IsMatch(password, "[A-Z]") &&
+                   Regex.IsMatch(password, "[a-z]") &&
+                   Regex.IsMatch(password, @"\d") &&
+                   Regex.IsMatch(password, @"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>/?]");
+        }
+
+        public static string GenerateSecurePassword()
+        {
+            const string U = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string L = "abcdefghijklmnopqrstuvwxyz";
+            const string D = "0123456789";
+            const string S = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+            Random rnd = new Random();
+            StringBuilder b = new StringBuilder();
+
+            b.Append(U[rnd.Next(U.Length)]);
+            b.Append(L[rnd.Next(L.Length)]);
+            b.Append(D[rnd.Next(D.Length)]);
+            b.Append(S[rnd.Next(S.Length)]);
+
+            string all = U + L + D + S;
+
+            while (b.Length < 12)
+                b.Append(all[rnd.Next(all.Length)]);
+
+            return new string(b.ToString().OrderBy(c => rnd.Next()).ToArray());
+        }
+
+        public static string HashPassword(string password)
+        {
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return BitConverter.ToString(hash).Replace("-", "").ToLower();
+            }
+        }
+
+        // ============================
+        // LOGIN + DATABASE USER OPERATIONS
+        // ============================
+
+        public static bool SqlLoginExists(string login)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+                object r = ExecuteScalar(conn,
+                    @"USE master; SELECT COUNT(*) FROM sys.server_principals 
+                      WHERE name=@n AND type IN ('S','U')",
+                    new SqlParameter("@n", login));
+                return Convert.ToInt32(r) > 0;
+            }
+        }
+
+        public static bool DatabaseUserExists(string name)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+                object r = ExecuteScalar(conn,
+                    @"SELECT COUNT(*) FROM sys.database_principals 
+                      WHERE name=@n AND type IN ('S','U')",
+                    new SqlParameter("@n", name));
+                return Convert.ToInt32(r) > 0;
+            }
+        }
+
+        public static bool CreateSqlServerLogin(string login, string password)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+
+                if (SqlLoginExists(login)) return true;
+
+                string q = $"CREATE LOGIN [{login}] WITH PASSWORD='{password.Replace("'", "''")}'";
+                ExecuteNonQuery(conn, q);
+                return true;
+            }
+        }
+
+        public static bool CreateDatabaseUser(string login)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+
+                if (DatabaseUserExists(login)) return true;
+
+                string sql = $@"
+                    CREATE USER [{login}] FOR LOGIN [{login}];
+                    ALTER ROLE [db_datareader] ADD MEMBER [{login}];";
+
+                ExecuteNonQuery(conn, sql);
+                return true;
+            }
+        }
+
+        public static bool DeleteSqlServerUser(string login)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+
+                string sql = $@"
+                    IF EXISTS (SELECT * FROM sys.database_principals WHERE name='{login}')
+                        DROP USER [{login}];
+
+                    USE master;
+                    IF EXISTS (SELECT * FROM sys.server_principals WHERE name='{login}')
+                        DROP LOGIN [{login}];";
+
+                ExecuteNonQuery(conn, sql);
+                return true;
+            }
+        }
+
+        // ============================
+        // CREATE USER FULL PIPELINE
+        // ============================
+
+        public static bool CreateUserWithSqlLogin(string username, string password, string fullName, out string finalPassword)
+        {
+            if (!IsValidSqlPassword(password))
+                password = GenerateSecurePassword();
+
+            finalPassword = password;
+
+            CreateSqlServerLogin(username, password);
+            CreateDatabaseUser(username);
+
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+
+                return ExecuteNonQuery(conn,
+                    @"INSERT INTO db_Users(Username, PasswordHash, FullName, SqlLoginName, DatabaseUserName)
+                      VALUES(@u,@p,@f,@l,@d)",
+                    new SqlParameter("@u", username),
+                    new SqlParameter("@p", HashPassword(password)),
+                    new SqlParameter("@f", fullName),
+                    new SqlParameter("@l", username),
+                    new SqlParameter("@d", username)) > 0;
+            }
+        }
+
+        // ============================
+        // DELETE USER (TABLE + SQL)
+        // ============================
+
         public static bool DeleteUser(int userId)
         {
             return DeleteUserWithSqlLogin(userId);
         }
 
-        // 3. Метод SaveUserTablePermission
-        public static bool SaveUserTablePermission(int userId, TablePermission permission)
-        {
-            try
-            {
-                string query = @"
-                    IF EXISTS (SELECT 1 FROM UserTablePermissions WHERE UserId = @userId AND TableName = @tableName)
-                    BEGIN
-                        UPDATE UserTablePermissions 
-                        SET CanView = @canView, 
-                            CanEdit = @canEdit, 
-                            CanDelete = @canDelete, 
-                            CanAdd = @canAdd
-                        WHERE UserId = @userId AND TableName = @tableName
-                    END
-                    ELSE
-                    BEGIN
-                        INSERT INTO UserTablePermissions (UserId, TableName, CanView, CanEdit, CanDelete, CanAdd)
-                        VALUES (@userId, @tableName, @canView, @canEdit, @canDelete, @canAdd)
-                    END";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@userId", userId);
-                        cmd.Parameters.AddWithValue("@tableName", permission.TableName);
-                        cmd.Parameters.AddWithValue("@canView", permission.CanView);
-                        cmd.Parameters.AddWithValue("@canEdit", permission.CanEdit);
-                        cmd.Parameters.AddWithValue("@canDelete", permission.CanDelete);
-                        cmd.Parameters.AddWithValue("@canAdd", permission.CanAdd);
-
-                        int rowsAffected = cmd.ExecuteNonQuery();
-                        return rowsAffected > 0 || true; // Возвращаем true даже если запись уже существует
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка при сохранении прав доступа: {ex.Message}");
-                return false;
-            }
-        }
-
-        // ========== ОСТАЛЬНЫЕ МЕТОДЫ (ваш существующий код) ==========
-
-        // Проверка сложности пароля для SQL Server
-        public static bool IsValidSqlPassword(string password)
-        {
-            // SQL Server требует пароли определенной сложности
-            if (string.IsNullOrEmpty(password) || password.Length < 8)
-                return false;
-
-            // Проверяем наличие хотя бы одного символа каждого типа
-            bool hasUpper = Regex.IsMatch(password, "[A-Z]");
-            bool hasLower = Regex.IsMatch(password, "[a-z]");
-            bool hasDigit = Regex.IsMatch(password, @"\d");
-            bool hasSpecial = Regex.IsMatch(password, @"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>\/?]");
-
-            return hasUpper && hasLower && hasDigit && hasSpecial;
-        }
-
-        // Генерация безопасного пароля для SQL Server
-        public static string GenerateSecurePassword()
-        {
-            const string upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            const string lower = "abcdefghijklmnopqrstuvwxyz";
-            const string digits = "0123456789";
-            const string special = "!@#$%^&*()_+-=[]{}|;:,.<>?";
-
-            Random random = new Random();
-            StringBuilder password = new StringBuilder();
-
-            // Гарантируем наличие каждого типа символов
-            password.Append(upper[random.Next(upper.Length)]);
-            password.Append(lower[random.Next(lower.Length)]);
-            password.Append(digits[random.Next(digits.Length)]);
-            password.Append(special[random.Next(special.Length)]);
-
-            // Добавляем случайные символы до длины 12
-            string allChars = upper + lower + digits + special;
-            for (int i = 4; i < 12; i++)
-            {
-                password.Append(allChars[random.Next(allChars.Length)]);
-            }
-
-            // Перемешиваем символы
-            return new string(password.ToString().ToCharArray().OrderBy(x => random.Next()).ToArray());
-        }
-
-        // Хэширование пароля для хранения в нашей таблице
-        public static string HashPassword(string password)
-        {
-            using (SHA256 sha256 = SHA256.Create())
-            {
-                byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                StringBuilder builder = new StringBuilder();
-                foreach (byte b in bytes)
-                {
-                    builder.Append(b.ToString("x2"));
-                }
-                return builder.ToString();
-            }
-        }
-
-        // Создание SQL Server Login
-        public static bool CreateSqlServerLogin(string loginName, string password, bool isWindowsAuth = false)
-        {
-            try
-            {
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-
-                    if (isWindowsAuth)
-                    {
-                        // Для Windows аутентификации
-                        string query = $"CREATE LOGIN [{loginName}] FROM WINDOWS";
-                        using (SqlCommand cmd = new SqlCommand(query, conn))
-                        {
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-                    else
-                    {
-                        // Для SQL Server аутентификации
-                        string query = $"CREATE LOGIN [{loginName}] WITH PASSWORD = '{password.Replace("'", "''")}'";
-                        using (SqlCommand cmd = new SqlCommand(query, conn))
-                        {
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-
-                    return true;
-                }
-            }
-            catch (SqlException ex)
-            {
-                // Уже существует
-                if (ex.Number == 15025 || ex.Message.Contains("already exists"))
-                    return true;
-
-                throw new Exception($"Не удалось создать SQL Login: {ex.Message}");
-            }
-        }
-
-        // Создание Database User из Login
-        public static bool CreateDatabaseUser(string loginName, string databaseUserName = null)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(databaseUserName))
-                    databaseUserName = loginName;
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-
-                    // Создаем пользователя в текущей базе данных
-                    string query = $@"
-                        USE [{conn.Database}];
-                        CREATE USER [{databaseUserName}] FOR LOGIN [{loginName}];
-                        ALTER ROLE [db_datareader] ADD MEMBER [{databaseUserName}];";
-
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    return true;
-                }
-            }
-            catch (SqlException ex)
-            {
-                // Уже существует
-                if (ex.Number == 15023 || ex.Message.Contains("already exists"))
-                    return true;
-
-                throw new Exception($"Не удалось создать Database User: {ex.Message}");
-            }
-        }
-
-        // Удаление SQL Server Login и Database User
-        public static bool DeleteSqlServerUser(string loginName)
-        {
-            try
-            {
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-
-                    // Получаем имя базы данных
-                    string dbName = conn.Database;
-
-                    // Удаляем пользователя из базы данных
-                    string dropUserQuery = $@"
-                        USE [{dbName}];
-                        IF EXISTS (SELECT * FROM sys.database_principals WHERE name = '{loginName}')
-                        BEGIN
-                            DROP USER [{loginName}];
-                        END";
-
-                    // Удаляем логин
-                    string dropLoginQuery = $@"
-                        USE [master];
-                        IF EXISTS (SELECT * FROM sys.server_principals WHERE name = '{loginName}')
-                        BEGIN
-                            DROP LOGIN [{loginName}];
-                        END";
-
-                    using (SqlCommand cmd = new SqlCommand(dropUserQuery + dropLoginQuery, conn))
-                    {
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Не удалось удалить SQL пользователя: {ex.Message}");
-            }
-        }
-
-        // Проверка существования SQL Login
-        public static bool SqlLoginExists(string loginName)
-        {
-            try
-            {
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-
-                    string query = @"
-                        USE [master];
-                        SELECT COUNT(*) 
-                        FROM sys.server_principals 
-                        WHERE name = @loginName AND type IN ('S', 'U')";
-
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@loginName", loginName);
-                        int count = Convert.ToInt32(cmd.ExecuteScalar());
-                        return count > 0;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        // Проверка существования Database User
-        public static bool DatabaseUserExists(string userName)
-        {
-            try
-            {
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-
-                    string query = @"
-                        SELECT COUNT(*) 
-                        FROM sys.database_principals 
-                        WHERE name = @userName AND type IN ('S', 'U')";
-
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@userName", userName);
-                        int count = Convert.ToInt32(cmd.ExecuteScalar());
-                        return count > 0;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        // Создание пользователя с SQL Login и Database User
-        public static bool CreateUserWithSqlLogin(string username, string password, string fullName, out string generatedPassword)
-        {
-            generatedPassword = null;
-
-            try
-            {
-                // Генерируем безопасный пароль, если не предоставлен
-                if (string.IsNullOrEmpty(password) || !IsValidSqlPassword(password))
-                {
-                    generatedPassword = GenerateSecurePassword();
-                    password = generatedPassword;
-                }
-                else
-                {
-                    generatedPassword = password;
-                }
-
-                // Создаем SQL Server Login
-                if (!SqlLoginExists(username))
-                {
-                    CreateSqlServerLogin(username, password);
-                }
-
-                // Создаем Database User
-                if (!DatabaseUserExists(username))
-                {
-                    CreateDatabaseUser(username);
-                }
-
-                // Сохраняем в нашу таблицу Users
-                string query = @"
-                    INSERT INTO db_Users (Username, PasswordHash, FullName, SqlLoginName, DatabaseUserName) 
-                    VALUES (@username, @passwordHash, @fullName, @sqlLoginName, @databaseUserName)";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@username", username);
-                        cmd.Parameters.AddWithValue("@passwordHash", HashPassword(password));
-                        cmd.Parameters.AddWithValue("@fullName", fullName);
-                        cmd.Parameters.AddWithValue("@sqlLoginName", username);
-                        cmd.Parameters.AddWithValue("@databaseUserName", username);
-
-                        int rowsAffected = cmd.ExecuteNonQuery();
-                        return rowsAffected > 0;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Ошибка при создании пользователя: {ex.Message}");
-            }
-        }
-
-        // Получение всех пользователей
-        public static List<User> GetAllUsers()
-        {
-            List<User> users = new List<User>();
-
-            try
-            {
-                string query = @"
-                    SELECT UserId, Username, FullName, IsActive, CreatedDate, SqlLoginName, DatabaseUserName 
-                    FROM db_Users 
-                    ORDER BY Username";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        using (SqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                users.Add(new User
-                                {
-                                    UserId = Convert.ToInt32(reader["UserId"]),
-                                    Username = reader["Username"].ToString(),
-                                    FullName = reader["FullName"].ToString(),
-                                    IsActive = Convert.ToBoolean(reader["IsActive"]),
-                                    CreatedDate = Convert.ToDateTime(reader["CreatedDate"]),
-                                    SqlLoginName = reader["SqlLoginName"]?.ToString(),
-                                    DatabaseUserName = reader["DatabaseUserName"]?.ToString()
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Ошибка при загрузке пользователей: {ex.Message}");
-            }
-
-            return users;
-        }
-
-        // Удаление пользователя вместе с SQL Login
         public static bool DeleteUserWithSqlLogin(int userId)
         {
-            try
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
             {
-                // Сначала получаем информацию о пользователе
-                string getQuery = "SELECT Username, SqlLoginName FROM db_Users WHERE UserId = @userId";
-                string username = "";
-                string sqlLoginName = "";
+                conn.Open();
 
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                string username = null;
+
+                using (SqlDataReader r = ExecuteReader(conn,
+                    "SELECT Username FROM db_Users WHERE UserId=@id",
+                    new SqlParameter("@id", userId)))
                 {
-                    conn.Open();
+                    if (r.Read())
+                        username = r["Username"].ToString();
+                }
 
-                    using (SqlCommand cmd = new SqlCommand(getQuery, conn))
+                if (username == null) return false;
+
+                ExecuteNonQuery(conn,
+                    "DELETE FROM db_Users WHERE UserId=@id",
+                    new SqlParameter("@id", userId));
+
+                DeleteSqlServerUser(username);
+                return true;
+            }
+        }
+
+        // ============================
+        // USER PERMISSIONS
+        // ============================
+
+        public static List<TablePermission> GetAllTablePermissions(int userId)
+        {
+            List<TablePermission> list = new List<TablePermission>();
+
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+
+                // Получаем ВСЕ таблицы
+                List<string> tables = new List<string>();
+                using (SqlDataReader r = ExecuteReader(conn,
+                    @"SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+                      WHERE TABLE_TYPE='BASE TABLE'
+                      AND TABLE_NAME NOT LIKE 'sys%'
+                      AND TABLE_NAME NOT LIKE 'MS%'
+                      AND TABLE_NAME NOT IN ('db_Users','UserTablePermissions')
+                      ORDER BY TABLE_NAME"))
+                {
+                    while (r.Read())
+                        tables.Add(r["TABLE_NAME"].ToString());
+                }
+
+                // Получаем права
+                foreach (string t in tables)
+                {
+                    TablePermission p = new TablePermission { TableName = t };
+
+                    using (SqlDataReader r = ExecuteReader(conn,
+                        @"SELECT CanView, CanEdit, CanDelete, CanAdd 
+                          FROM UserTablePermissions 
+                          WHERE UserId=@u AND TableName=@t",
+                        new SqlParameter("@u", userId),
+                        new SqlParameter("@t", t)))
                     {
-                        cmd.Parameters.AddWithValue("@userId", userId);
-                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        if (r.Read())
                         {
-                            if (reader.Read())
-                            {
-                                username = reader["Username"].ToString();
-                                sqlLoginName = reader["SqlLoginName"]?.ToString();
-                            }
+                            p.CanView = (bool)r["CanView"];
+                            p.CanEdit = (bool)r["CanEdit"];
+                            p.CanDelete = (bool)r["CanDelete"];
+                            p.CanAdd = (bool)r["CanAdd"];
                         }
                     }
 
-                    // Удаляем из нашей таблицы
-                    string deleteQuery = "DELETE FROM db_Users WHERE UserId = @userId";
-                    using (SqlCommand cmd = new SqlCommand(deleteQuery, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@userId", userId);
-                        int rowsAffected = cmd.ExecuteNonQuery();
-
-                        if (rowsAffected > 0)
-                        {
-                            // Удаляем SQL Login и Database User
-                            if (!string.IsNullOrEmpty(sqlLoginName))
-                            {
-                                DeleteSqlServerUser(sqlLoginName);
-                            }
-                            return true;
-                        }
-                    }
+                    list.Add(p);
                 }
+            }
 
-                return false;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Ошибка при удалении пользователя: {ex.Message}");
-            }
+            return list;
         }
 
-        // Изменение пароля SQL Login
-        public static bool ChangeSqlLoginPassword(string loginName, string newPassword)
+        public static bool SaveUserTablePermission(int userId, TablePermission p)
         {
-            try
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
             {
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
+                conn.Open();
 
-                    string query = $@"
-                        USE [master];
-                        ALTER LOGIN [{loginName}] WITH PASSWORD = '{newPassword.Replace("'", "''")}'";
+                string sql =
+@"IF EXISTS (SELECT 1 FROM UserTablePermissions WHERE UserId=@u AND TableName=@t)
+    UPDATE UserTablePermissions 
+        SET CanView=@v, CanEdit=@e, CanDelete=@d, CanAdd=@a
+    WHERE UserId=@u AND TableName=@t
+ELSE
+    INSERT INTO UserTablePermissions (UserId, TableName, CanView, CanEdit, CanDelete, CanAdd)
+    VALUES (@u,@t,@v,@e,@d,@a)";
 
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.ExecuteNonQuery();
-                    }
+                ExecuteNonQuery(conn, sql,
+                    new SqlParameter("@u", userId),
+                    new SqlParameter("@t", p.TableName),
+                    new SqlParameter("@v", p.CanView),
+                    new SqlParameter("@e", p.CanEdit),
+                    new SqlParameter("@d", p.CanDelete),
+                    new SqlParameter("@a", p.CanAdd));
 
-                    // Обновляем хэш в нашей таблице
-                    string updateQuery = @"
-                        UPDATE db_Users 
-                        SET PasswordHash = @passwordHash 
-                        WHERE Username = @username OR SqlLoginName = @loginName";
-
-                    using (SqlCommand cmd = new SqlCommand(updateQuery, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@passwordHash", HashPassword(newPassword));
-                        cmd.Parameters.AddWithValue("@username", loginName);
-                        cmd.Parameters.AddWithValue("@loginName", loginName);
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Ошибка при изменении пароля: {ex.Message}");
+                return true;
             }
         }
-        // 1111
-        public static bool GrantDatabaseRole(string userName, string roleName)
+
+        public static void ApplyTablePermission(string username, TablePermission p)
         {
-            try
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
             {
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
+                conn.Open();
 
-                    string query = $@"
-                        USE [{conn.Database}];
-                        ALTER ROLE [{roleName}] ADD MEMBER [{userName}];";
+                string sql =
+                    (p.CanView ? "GRANT SELECT" : "REVOKE SELECT") +
+                    $" ON [{p.TableName}] TO [{username}];" +
 
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.ExecuteNonQuery();
-                    }
+                    (p.CanAdd ? "GRANT INSERT" : "REVOKE INSERT") +
+                    $" ON [{p.TableName}] TO [{username}];" +
 
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Ошибка при назначении роли: {ex.Message}");
+                    (p.CanEdit ? "GRANT UPDATE" : "REVOKE UPDATE") +
+                    $" ON [{p.TableName}] TO [{username}];" +
+
+                    (p.CanDelete ? "GRANT DELETE" : "REVOKE DELETE") +
+                    $" ON [{p.TableName}] TO [{username}];";
+
+                ExecuteNonQuery(conn, sql);
             }
         }
 
-        // Отзыв ролей у пользователя
-        public static bool RevokeDatabaseRole(string userName, string roleName)
+        // ============================
+        // ADMIN TABLE (LOCAL)
+        // ============================
+
+        public static bool IsAdminInLocalTable(string username)
         {
-            try
+            CreateAdminTableIfNotExists();
+
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
             {
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-
-                    string query = $@"
-                        USE [{conn.Database}];
-                        ALTER ROLE [{roleName}] DROP MEMBER [{userName}];";
-
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Ошибка при отзыве роли: {ex.Message}");
+                conn.Open();
+                object r = ExecuteScalar(conn,
+                    "SELECT COUNT(*) FROM UserAdmins WHERE Username=@u",
+                    new SqlParameter("@u", username));
+                return Convert.ToInt32(r) > 0;
             }
         }
 
-        // Получение списка доступных ролей
+        public static bool AddToAdmins(string username, string grantedBy = "system")
+        {
+            CreateAdminTableIfNotExists();
+
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+
+                string sql =
+@"IF NOT EXISTS (SELECT * FROM UserAdmins WHERE Username=@u)
+    INSERT INTO UserAdmins (Username, GrantedBy) VALUES (@u,@g)
+ELSE
+    UPDATE UserAdmins SET IsAdmin=1, GrantedDate=GETDATE(), GrantedBy=@g
+    WHERE Username=@u";
+
+                ExecuteNonQuery(conn, sql,
+                    new SqlParameter("@u", username),
+                    new SqlParameter("@g", grantedBy));
+            }
+
+            return true;
+        }
+
+        private static void CreateAdminTableIfNotExists()
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+
+                string sql =
+@"IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='UserAdmins')
+BEGIN
+    CREATE TABLE UserAdmins(
+        Id INT PRIMARY KEY IDENTITY(1,1),
+        Username NVARCHAR(128) UNIQUE NOT NULL,
+        IsAdmin BIT DEFAULT 1,
+        GrantedDate DATETIME DEFAULT GETDATE(),
+        GrantedBy NVARCHAR(128)
+    );
+    INSERT INTO UserAdmins(Username) VALUES ('admin');
+END";
+
+                ExecuteNonQuery(conn, sql);
+            }
+        }
+
+        // ============================
+        // DATABASE ROLES
+        // ============================
+
+        public static bool GrantDatabaseRole(string username, string role)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+
+                string sql =
+$@"ALTER ROLE [{role}] ADD MEMBER [{username}];";
+
+                ExecuteNonQuery(conn, sql);
+                return true;
+            }
+        }
+
+        public static bool RevokeDatabaseRole(string username, string role)
+        {
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+            {
+                conn.Open();
+
+                string sql =
+$@"ALTER ROLE [{role}] DROP MEMBER [{username}];";
+
+                ExecuteNonQuery(conn, sql);
+                return true;
+            }
+        }
+
         public static List<string> GetDatabaseRoles()
         {
-            List<string> roles = new List<string>();
+            List<string> list = new List<string>();
 
-            try
+            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
             {
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
+                conn.Open();
+
+                using (SqlDataReader r = ExecuteReader(conn,
+                    @"SELECT name FROM sys.database_principals 
+                      WHERE type='R' AND is_fixed_role=1 ORDER BY name"))
                 {
-                    conn.Open();
-
-                    string query = @"
-                        SELECT name 
-                        FROM sys.database_principals 
-                        WHERE type = 'R' 
-                        AND is_fixed_role = 1
-                        ORDER BY name";
-
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        using (SqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                roles.Add(reader["name"].ToString());
-                            }
-                        }
-                    }
+                    while (r.Read())
+                        list.Add(r["name"].ToString());
                 }
             }
-            catch (Exception)
+
+            if (list.Count == 0)
             {
-                // Возвращаем основные роли по умолчанию
-                roles = new List<string>
+                list.AddRange(new[]
                 {
-                    "db_datareader",
-                    "db_datawriter",
-                    "db_ddladmin",
-                    "db_accessadmin",
-                    "db_securityadmin",
-                    "db_backupoperator",
-                    "db_owner"
-                };
+                    "db_datareader","db_datawriter","db_ddladmin",
+                    "db_accessadmin","db_securityadmin",
+                    "db_backupoperator","db_owner"
+                });
             }
 
-            return roles;
+            return list;
         }
 
-        // ========== ДОПОЛНИТЕЛЬНЫЕ МЕТОДЫ ДЛЯ УДОБСТВА ==========
+        // ============================
+        // ADMIN CHECK
+        // ============================
 
-        // Проверка, существует ли пользователь в нашей таблице
-        public static bool UserExistsInDb(string username)
-        {
-            try
-            {
-                string query = "SELECT COUNT(*) FROM db_Users WHERE Username = @username";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@username", username);
-                        int count = Convert.ToInt32(cmd.ExecuteScalar());
-                        return count > 0;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        // Получение пользователя по ID
-        public static User GetUserById(int userId)
-        {
-            try
-            {
-                string query = @"
-                    SELECT UserId, Username, FullName, IsActive, CreatedDate, SqlLoginName, DatabaseUserName 
-                    FROM db_Users 
-                    WHERE UserId = @userId";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@userId", userId);
-                        using (SqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                return new User
-                                {
-                                    UserId = Convert.ToInt32(reader["UserId"]),
-                                    Username = reader["Username"].ToString(),
-                                    FullName = reader["FullName"].ToString(),
-                                    IsActive = Convert.ToBoolean(reader["IsActive"]),
-                                    CreatedDate = Convert.ToDateTime(reader["CreatedDate"]),
-                                    SqlLoginName = reader["SqlLoginName"]?.ToString(),
-                                    DatabaseUserName = reader["DatabaseUserName"]?.ToString()
-                                };
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Ошибка при получении пользователя: {ex.Message}");
-            }
-
-            return null;
-        }
-
-        // Обновление информации о пользователе
-        public static bool UpdateUser(int userId, string fullName, bool isActive)
-        {
-            try
-            {
-                string query = @"
-                    UPDATE db_Users 
-                    SET FullName = @fullName, 
-                        IsActive = @isActive 
-                    WHERE UserId = @userId";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@userId", userId);
-                        cmd.Parameters.AddWithValue("@fullName", fullName);
-                        cmd.Parameters.AddWithValue("@isActive", isActive);
-
-                        int rowsAffected = cmd.ExecuteNonQuery();
-                        return rowsAffected > 0;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Ошибка при обновлении пользователя: {ex.Message}");
-            }
-        }
-        // Метод с повторными попытками назначения роли
-        public static bool GrantDatabaseRoleWithRetry(string userName, string roleName, int maxRetries = 3)
-        {
-            for (int i = 0; i < maxRetries; i++)
-            {
-                try
-                {
-                    return GrantDatabaseRole(userName, roleName);
-                }
-                catch (SqlException ex) when (ex.Number == 15151) // User does not exist
-                {
-                    if (i == maxRetries - 1) throw;
-                    System.Threading.Thread.Sleep(500 * (i + 1)); // Ждем перед повторной попыткой
-                }
-            }
-            return false;
-        }
-
-        // Метод для получения имени сервера
-        private static string GetServerName()
-        {
-            try
-            {
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    return conn.DataSource;
-                }
-            }
-            catch
-            {
-                return "localhost";
-            }
-        }
-        // Проверка, является ли пользователь администратором
         public static bool IsUserAdmin(string username)
         {
             try
@@ -865,164 +587,19 @@ namespace blago.Classes
                 {
                     conn.Open();
 
-                    // Проверяем роли пользователя в базе данных
-                    string query = @"
-                SELECT COUNT(*) 
-                FROM sys.database_role_members rm
-                JOIN sys.database_principals r ON rm.role_principal_id = r.principal_id
-                JOIN sys.database_principals u ON rm.member_principal_id = u.principal_id
-                WHERE u.name = @username 
-                AND r.name IN ('db_owner', 'db_securityadmin', 'db_accessadmin')";
+                    object r = ExecuteScalar(conn,
+                        @"SELECT COUNT(*) FROM sys.database_role_members rm
+                          JOIN sys.database_principals r ON rm.role_principal_id = r.principal_id
+                          JOIN sys.database_principals u ON rm.member_principal_id = u.principal_id
+                          WHERE u.name=@u AND r.name IN ('db_owner','db_securityadmin','db_accessadmin')",
+                        new SqlParameter("@u", username));
 
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@username", username);
-                        int count = Convert.ToInt32(cmd.ExecuteScalar());
-                        return count > 0;
-                    }
+                    if (Convert.ToInt32(r) > 0) return true;
                 }
             }
-            catch (Exception)
-            {
-                // Если не можем проверить роли, проверяем по нашей таблице
-                return IsAdminInLocalTable(username);
-            }
+            catch { }
+
+            return IsAdminInLocalTable(username);
         }
-
-        // Проверка в локальной таблице
-        public static bool IsAdminInLocalTable(string username)
-        {
-            try
-            {
-                // Создадим таблицу для хранения администраторов
-                CreateAdminTableIfNotExists();
-
-                string query = "SELECT COUNT(*) FROM UserAdmins WHERE Username = @username";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@username", username);
-                        int count = Convert.ToInt32(cmd.ExecuteScalar());
-                        return count > 0;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        // Создание таблицы для администраторов
-        private static void CreateAdminTableIfNotExists()
-        {
-            try
-            {
-                string query = @"
-            IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'UserAdmins')
-            BEGIN
-                CREATE TABLE UserAdmins (
-                    Id INT PRIMARY KEY IDENTITY(1,1),
-                    Username NVARCHAR(128) UNIQUE NOT NULL,
-                    IsAdmin BIT DEFAULT 1,
-                    GrantedDate DATETIME DEFAULT GETDATE(),
-                    GrantedBy NVARCHAR(128)
-                );
-                
-                -- Добавляем администратора по умолчанию
-                INSERT INTO UserAdmins (Username) VALUES ('admin');
-            END";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Игнорируем ошибку создания таблицы
-            }
-        }
-
-        // Добавление пользователя в список администраторов
-        public static bool AddToAdmins(string username, string grantedBy = "system")
-        {
-            try
-            {
-                CreateAdminTableIfNotExists();
-
-                string query = @"
-            IF NOT EXISTS (SELECT * FROM UserAdmins WHERE Username = @username)
-            BEGIN
-                INSERT INTO UserAdmins (Username, GrantedBy) 
-                VALUES (@username, @grantedBy);
-            END
-            ELSE
-            BEGIN
-                UPDATE UserAdmins 
-                SET IsAdmin = 1, GrantedDate = GETDATE(), GrantedBy = @grantedBy
-                WHERE Username = @username;
-            END";
-
-                using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@username", username);
-                        cmd.Parameters.AddWithValue("@grantedBy", grantedBy);
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка при добавлении администратора: {ex.Message}");
-                return false;
-            }
-        }
-        public static void ApplyTablePermission(string username, TablePermission p)
-        {
-            using (SqlConnection conn = DatabaseManager.CreateNewConnection())
-            {
-                conn.Open();
-
-                // SELECT
-                string selectSql = p.CanView
-                    ? $"GRANT SELECT ON [{p.TableName}] TO [{username}];"
-                    : $"REVOKE SELECT ON [{p.TableName}] FROM [{username}];";
-
-                // INSERT
-                string insertSql = p.CanAdd
-                    ? $"GRANT INSERT ON [{p.TableName}] TO [{username}];"
-                    : $"REVOKE INSERT ON [{p.TableName}] FROM [{username}];";
-
-                // UPDATE
-                string updateSql = p.CanEdit
-                    ? $"GRANT UPDATE ON [{p.TableName}] TO [{username}];"
-                    : $"REVOKE UPDATE ON [{p.TableName}] FROM [{username}];";
-
-                // DELETE
-                string deleteSql = p.CanDelete
-                    ? $"GRANT DELETE ON [{p.TableName}] TO [{username}];"
-                    : $"REVOKE DELETE ON [{p.TableName}] FROM [{username}];";
-
-                using (SqlCommand cmd = new SqlCommand(
-                     selectSql + insertSql + updateSql + deleteSql, conn))
-                {
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
-
     }
 }
